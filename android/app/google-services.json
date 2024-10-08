@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:773843122627:android:1e70f11942671cc48be576",
+        "android_client_info": {
+          "package_name": "com.android.application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5l_y6CU2G4bLIUXgE4QwW6l71CtmsOVc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:773843122627:android:93430ccf546ce1c88be576",
         "android_client_info": {
           "package_name": "com.hcode.spor_takip_uygulamasi"

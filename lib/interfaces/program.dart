@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class ProgramScreen extends StatefulWidget {
@@ -10,11 +11,41 @@ class ProgramScreen extends StatefulWidget {
 class _ProgramScreenState extends State<ProgramScreen> {
   @override
   Widget build(BuildContext context) {
+    CollectionReference programRef =
+        FirebaseFirestore.instance.collection('Users/User.1/Program');
+
+    Future<void> addProgram() async {
+      try {
+        // Firestore'a veri ekliyoruz
+        await programRef.add({
+          'Agirlik': 60, // Eklenecek veriler
+          'Tarih': DateTime.now(), // Eklenme tarihi
+          // Diğer verileri buraya ekleyebilirsiniz
+        });
+        // Başarılı bir ekleme sonrası kullanıcıya mesaj göster
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Program başarıyla eklendi!'),
+        ));
+      } catch (e) {
+        // Hata durumunda kullanıcıya mesaj göster
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Veri eklerken hata oluştu: $e'),
+        ));
+      }
+    }
+
     return SafeArea(
       child: Scaffold(
         body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text('Program Screen'),
+            TextButton(
+                onPressed: () {
+                  addProgram();
+                },
+                child: Text('Program Ekle+')),
           ],
         ),
       ),
