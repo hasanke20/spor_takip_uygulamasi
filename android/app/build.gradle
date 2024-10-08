@@ -3,21 +3,8 @@ plugins {
     id "kotlin-android"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
+    // Firebase Google Services plugin
     id 'com.google.gms.google-services' version '4.3.15' apply false
-}
-
-dependencies {
-    // Import the Firebase BoM
-    implementation platform('com.google.firebase:firebase-bom:33.4.0')
-
-
-    // TODO: Add the dependencies for Firebase products you want to use
-    // When using the BoM, don't specify versions in Firebase dependencies
-    implementation 'com.google.firebase:firebase-analytics'
-
-
-    // Add the dependencies for any other desired Firebase products
-    // https://firebase.google.com/docs/android/setup#available-libraries
 }
 
 android {
@@ -54,6 +41,18 @@ android {
     }
 }
 
-flutter {
-    source = "../.."
+// Firebase BoM ve bağımlılıklarını ekleyin
+dependencies {
+    // Import the Firebase BoM
+    implementation platform('com.google.firebase:firebase-bom:33.4.0')
+
+    // Firebase Analytics ve diğer Firebase ürünleri
+    implementation 'com.google.firebase:firebase-analytics'
+    // Örneğin Firebase Messaging'i kullanmak isterseniz, aşağıdaki satırı ekleyebilirsiniz.
+    implementation 'com.google.firebase:firebase-messaging'
+
+    // Diğer bağımlılıklarınızı buraya ekleyin
 }
+
+// Firebase Google Services plugin'i uygulayın
+apply plugin: 'com.google.gms.google-services' // Bu satırı ekleyin
