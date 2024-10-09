@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:spor_takip_uygulamasi/interfaces/home.dart';
 import 'package:spor_takip_uygulamasi/interfaces/profil.dart';
 import 'package:spor_takip_uygulamasi/interfaces/program.dart';
+import 'package:spor_takip_uygulamasi/interfaces/uyegirisi.dart';
 
 class Assigner extends StatefulWidget {
   const Assigner({super.key});
@@ -13,7 +14,19 @@ class Assigner extends StatefulWidget {
 
 class _AssignerState extends State<Assigner> {
   int _currentTab = 0;
-  final List<Widget> _screens = [Home(), ProgramScreen(), ProfilScreen()];
+
+  void _toAnaSayfa() {
+    setState(() {
+      _currentTab = 1; // Ana sayfa için indexi 1 olarak ayarla
+    });
+  }
+
+  final List<Widget> _screens = [
+    UyeGirisi(),
+    Home(),
+    ProgramScreen(),
+    ProfilScreen()
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +34,7 @@ class _AssignerState extends State<Assigner> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            _currentTab = 0;
+            _currentTab = 1;
           });
         },
         child: Icon(Icons.home),

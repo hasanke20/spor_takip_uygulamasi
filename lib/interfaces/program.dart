@@ -18,7 +18,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
       try {
         // Firestore'a veri ekliyoruz
         await programRef.add({
-          'Agirlik': 60, // Eklenecek veriler
+          'Agirlik': 72, // Eklenecek veriler
           'Tarih': DateTime.now(), // Eklenme tarihi
           // Diğer verileri buraya ekleyebilirsiniz
         });
@@ -36,17 +36,18 @@ class _ProgramScreenState extends State<ProgramScreen> {
 
     return SafeArea(
       child: Scaffold(
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text('Program Screen'),
-            TextButton(
-                onPressed: () {
-                  addProgram();
-                },
-                child: Text('Program Ekle+')),
-          ],
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Program Screen'),
+              TextButton(
+                  onPressed: () {
+                    addProgram();
+                  },
+                  child: Text('Program Ekle+')),
+            ],
+          ),
         ),
       ),
     );

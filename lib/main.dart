@@ -5,15 +5,23 @@ import 'package:get/get.dart';
 import 'package:spor_takip_uygulamasi/interfaces/assigner.dart';
 
 void main() async {
-  // Uygulama başlangıcında Flutter motorunu başlatın.
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Firebase'i başlatın.
   await Firebase.initializeApp();
-
   // Uygulamayı çalıştırın.
-  runApp(
-    GetMaterialApp(
+  runApp(MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  Widget build(BuildContext context) {
+    return GetMaterialApp(
       initialRoute: '/',
       getPages: [
         GetPage(
@@ -23,8 +31,8 @@ void main() async {
         // Diğer rotaları buraya ekleyin
       ],
       title: 'Weight Tracker',
-    ),
-  );
+    );
+  }
 }
 
 FirebaseFirestore firestore = FirebaseFirestore.instance;
