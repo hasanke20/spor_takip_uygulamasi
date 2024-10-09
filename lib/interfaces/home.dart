@@ -13,7 +13,7 @@ class _HomeState extends State<Home> {
     return SafeArea(
       child: Column(
         children: [
-          Text('Home Screen'),
+          Text('Home Screen yes'),
         ],
       ),
     );
