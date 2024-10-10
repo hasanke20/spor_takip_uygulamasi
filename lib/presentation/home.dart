@@ -11,10 +11,15 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Column(
-        children: [
-          Text('Home Screen yes'),
-        ],
+      child: Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Home Screen'),
+            ],
+          ),
+        ),
       ),
     );
   }

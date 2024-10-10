@@ -1,8 +1,11 @@
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:spor_takip_uygulamasi/interfaces/home.dart';
-import 'package:spor_takip_uygulamasi/interfaces/profil.dart';
-import 'package:spor_takip_uygulamasi/interfaces/program.dart';
+import 'package:spor_takip_uygulamasi/presentation/home.dart';
+import 'package:spor_takip_uygulamasi/presentation/profil.dart';
+import 'package:spor_takip_uygulamasi/presentation/program.dart';
+
+import 'empty.dart';
+import 'istatistik.dart';
 
 class Assigner extends StatefulWidget {
   const Assigner({super.key});
@@ -13,7 +16,13 @@ class Assigner extends StatefulWidget {
 
 class _AssignerState extends State<Assigner> {
   int _currentTab = 0;
-  final List<Widget> _screens = [Home(), ProgramScreen(), ProfilScreen()];
+  final List<Widget> _screens = [
+    Home(),
+    EmptyScreen(),
+    ProgramScreen(),
+    IstatisticScreen(),
+    ProfilScreen()
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +38,7 @@ class _AssignerState extends State<Assigner> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: AnimatedBottomNavigationBar(
         gapLocation: GapLocation.center,
-        icons: [Icons.list, Icons.person],
+        icons: [Icons.add, Icons.list, Icons.show_chart, Icons.person],
         activeIndex: _currentTab,
         onTap: (int index) {
           setState(

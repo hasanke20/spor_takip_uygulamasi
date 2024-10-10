@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyC5l_y6CU2G4bLIUXgE4QwW6l71CtmsOVc',
-    appId: '1:773843122627:android:1e70f11942671cc48be576',
+    appId: '1:773843122627:android:82f7bd11dd43f5c48be576',
     messagingSenderId: '773843122627',
     projectId: 'hcode-spor-takip-programi',
     storageBucket: 'hcode-spor-takip-programi.appspot.com',
