@@ -4,39 +4,32 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AddProgram {
-  static CollectionReference programRef =
-      FirebaseFirestore.instance.collection('Users/User.1/Program');
+  static CollectionReference programRef(String uid) {
+    return FirebaseFirestore.instance.collection('Users/$uid/Program');
+  }
 
   static Future<void> addProgram(BuildContext context) async {
+    String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Kullanıcı kimliği alınamadı!'),
+      ));
+      return;
+    }
+    CollectionReference ref = programRef(uid);
     try {
-      await programRef.add({
+      DocumentReference docRef = await ref.add({
         'Agirlik': 72,
         'Tarih': DateTime.now(),
         // Diğer verileri buraya ekleyebilirsiniz
       });
+
+      // Belge ID'sini yazdırın
+      print('Yeni Program Belgesi ID: ${docRef.id}');
+
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Program başarıyla eklendi!'),
-      ));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Veri eklerken hata oluştu: $e'),
-      ));
-    }
-  }
-}
-
-class AddNewUser {
-  static CollectionReference usersRef =
-      FirebaseFirestore.instance.collection('Users');
-
-  static Future<void> addNewUser(BuildContext context) async {
-    try {
-      await usersRef.add({
-        'name': 'Ilk Uye',
-        // Diğer verileri buraya ekleyebilirsiniz
-      });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Kullanıcı başarıyla eklendi!'),
       ));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -50,19 +43,15 @@ class SignInWithGoogle {
   static CollectionReference usersRef =
       FirebaseFirestore.instance.collection('Users');
 
-  // E-posta adresi için controller
-  static TextEditingController emailController = TextEditingController();
-
   static Future<bool> signIn(BuildContext context) async {
     try {
-      String? email = await _showEmailDialog(context);
-      if (email == null || email.isEmpty) {
-        return false;
-      }
-
+      // GoogleSignIn nesnesini oluştur
       final GoogleSignIn googleSignIn = GoogleSignIn();
+
+      // Google ile oturum açmayı başlat
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
+      // Kullanıcı oturum açmayı iptal ettiyse
       if (googleUser == null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Oturum açma iptal edildi.'),
@@ -70,20 +59,25 @@ class SignInWithGoogle {
         return false;
       }
 
+      // Google kimlik doğrulaması
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
+      // Firebase kimlik bilgileri oluştur
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
+      // Firebase ile oturum aç
       final UserCredential userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
 
+      // Kullanıcı bilgilerini Firestore'a kaydet
       await usersRef.doc(userCredential.user!.uid).set({
         'name': userCredential.user!.displayName,
-        'email': email, // Kullanıcıdan alınan e-posta
+        'email': userCredential
+            .user!.email, // Kullanıcının Google hesabındaki e-posta
       });
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -96,32 +90,6 @@ class SignInWithGoogle {
       ));
       return false;
     }
-  }
-
-  static Future<String?> _showEmailDialog(BuildContext context) async {
-    String? email;
-    return showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('E-posta Adresi'),
-          content: TextField(
-            controller: emailController,
-            decoration: InputDecoration(hintText: 'E-posta adresinizi girin'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                email = emailController.text;
-                emailController.clear(); // Controller'ı temizle
-                Navigator.of(context).pop(email); // E-posta adresini döndür
-              },
-              child: Text('Tamam'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   static void signOut(BuildContext context) async {
@@ -197,3 +165,24 @@ class LoginUser {
     }
   }
 }
+
+/*class AddNewUser {
+  static CollectionReference usersRef =
+  FirebaseFirestore.instance.collection('Users');
+
+  static Future<void> addNewUser(BuildContext context) async {
+    try {
+      await usersRef.add({
+        'name': 'Ilk Uye',
+        // Diğer verileri buraya ekleyebilirsiniz
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Kullanıcı başarıyla eklendi!'),
+      ));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Veri eklerken hata oluştu: $e'),
+      ));
+    }
+  }
+}*/

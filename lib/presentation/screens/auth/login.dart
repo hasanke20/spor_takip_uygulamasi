@@ -43,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   int _toggleIndex = 0;
+  bool _isPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -76,11 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     label: 'Email',
                   ),
-                  _buildTextField(
-                    controller: _passwordController,
-                    label: 'Şifre',
-                    obscureText: true,
-                  ),
+                  _buildPasswordField(),
                   SizedBox(height: 20),
                   _buildActionButton(),
                   ElevatedButton(
@@ -106,6 +103,29 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return SizedBox(
+      width: (MediaQuery.of(context).size.width * 3) / 5,
+      child: TextFormField(
+        controller: _passwordController,
+        decoration: InputDecoration(
+          labelText: 'Şifre',
+          suffixIcon: IconButton(
+            icon: Icon(
+              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+            ),
+            onPressed: () {
+              setState(() {
+                _isPasswordVisible = !_isPasswordVisible;
+              });
+            },
+          ),
+        ),
+        obscureText: !_isPasswordVisible,
+      ),
     );
   }
 
