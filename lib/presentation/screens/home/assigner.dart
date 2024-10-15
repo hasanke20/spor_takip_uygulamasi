@@ -1,14 +1,16 @@
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:spor_takip_uygulamasi/presentation/home.dart';
-import 'package:spor_takip_uygulamasi/presentation/profil.dart';
-import 'package:spor_takip_uygulamasi/presentation/program.dart';
+import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/home.dart';
+import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/profil.dart';
+import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/program.dart';
 
-import 'empty.dart';
-import 'istatistik.dart';
+import 'sub_screens/empty.dart';
+import 'sub_screens/istatistik.dart';
 
 class Assigner extends StatefulWidget {
-  const Assigner({super.key});
+  Assigner({super.key});
+  final Future<FirebaseApp> _initialization = Firebase.initializeApp();
 
   @override
   State<Assigner> createState() => _AssignerState();
@@ -23,10 +25,20 @@ class _AssignerState extends State<Assigner> {
     IstatisticScreen(),
     ProfilScreen()
   ];
+  final List<String> _screensAppBar = [
+    'Home',
+    'EmptyScreen',
+    'ProgramScreen',
+    'IstatisticScreen',
+    'ProfilScreen'
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(_screensAppBar[_currentTab]),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {

@@ -1,0 +1,126 @@
+{
+  "project_info": {
+    "project_number": "773843122627",
+    "project_id": "hcode-spor-takip-programi",
+    "storage_bucket": "hcode-spor-takip-programi.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773843122627:android:1e70f11942671cc48be576",
+        "android_client_info": {
+          "package_name": "com.android.application"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "773843122627-gatq1l4ir7js77ffkjrskk115277184t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5l_y6CU2G4bLIUXgE4QwW6l71CtmsOVc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "773843122627-gatq1l4ir7js77ffkjrskk115277184t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "773843122627-ruegui3tiot6fgr9jsls6iljpdg6tqoa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hcode.sporTakipUygulamasi"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773843122627:android:82f7bd11dd43f5c48be576",
+        "android_client_info": {
+          "package_name": "com.hcode.spor_programi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "773843122627-gatq1l4ir7js77ffkjrskk115277184t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5l_y6CU2G4bLIUXgE4QwW6l71CtmsOVc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "773843122627-gatq1l4ir7js77ffkjrskk115277184t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "773843122627-ruegui3tiot6fgr9jsls6iljpdg6tqoa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hcode.sporTakipUygulamasi"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773843122627:android:93430ccf546ce1c88be576",
+        "android_client_info": {
+          "package_name": "com.hcode.spor_takip_uygulamasi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "773843122627-katj53i1bjej2qsqlucd5co03ljgbmqp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hcode.spor_takip_uygulamasi",
+            "certificate_hash": "d6131dcf9be6ed869e53e6b1309c7b1261307847"
+          }
+        },
+        {
+          "client_id": "773843122627-gatq1l4ir7js77ffkjrskk115277184t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5l_y6CU2G4bLIUXgE4QwW6l71CtmsOVc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "773843122627-gatq1l4ir7js77ffkjrskk115277184t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "773843122627-ruegui3tiot6fgr9jsls6iljpdg6tqoa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hcode.sporTakipUygulamasi"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
