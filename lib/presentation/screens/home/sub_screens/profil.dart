@@ -12,54 +12,48 @@ class ProfilScreen extends StatefulWidget {
 class _ProfilScreenState extends State<ProfilScreen> {
   String? username;
   String? email;
-  bool isLoading = true; // Yükleme durumu için bir değişken ekle
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchUserData(); // Kullanıcı verilerini almak için çağır
+    _fetchUserData();
   }
 
   Future<void> _fetchUserData() async {
-    User? currentUser =
-        FirebaseAuth.instance.currentUser; // Şu anki kullanıcıyı al
+    User? currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser != null) {
       try {
-        // Firestore'dan kullanıcı adını al
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
             .collection('Users')
             .doc(currentUser.uid)
             .get();
 
         if (userDoc.exists) {
-          // Belgenin varlığını kontrol et
           setState(() {
-            username =
-                userDoc['username']; // Firestore'dan alınan kullanıcı adı
-            email = currentUser.email; // Firebase Auth'dan alınan email
-            isLoading = false; // Yükleme tamamlandı
+            username = userDoc['username'];
+            email = currentUser.email;
+            isLoading = false;
           });
         } else {
-          // Eğer belge yoksa
           setState(() {
             username = 'Kullanıcı adı bulunamadı';
-            email = currentUser.email; // Email yine de gösterilebilir
-            isLoading = false; // Yükleme tamamlandı
+            email = currentUser.email;
+            isLoading = false;
           });
         }
       } catch (error) {
-        // Hata yakala ve kullanıcıya bildir
         setState(() {
-          username = 'Veri alınırken hata oluştu: $error'; // Hata mesajı göster
-          email = currentUser.email; // Email yine de gösterilebilir
-          isLoading = false; // Yükleme tamamlandı
+          username = 'Veri alınırken hata oluştu: $error';
+          email = currentUser.email;
+          isLoading = false;
         });
       }
     } else {
       setState(() {
-        email = 'Kullanıcı oturumu açmamış'; // Kullanıcı yoksa mesaj göster
-        isLoading = false; // Yükleme tamamlandı
+        email = 'Kullanıcı oturumu açmamış';
+        isLoading = false;
       });
     }
   }
@@ -73,20 +67,19 @@ class _ProfilScreenState extends State<ProfilScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(child: Text('Profile Screen')),
-              if (isLoading) // Yükleniyor durumu kontrolü
-                CircularProgressIndicator(), // Yükleniyor göstergesi
+              if (isLoading) CircularProgressIndicator(),
               if (!isLoading) ...[
                 SizedBox(
                   height: 80,
                 ),
                 Container(
-                  padding: EdgeInsets.all(16), // İçerik için boşluk ekleyin
+                  padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.black,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Colors.black, // Kenarlık rengi
-                      width: 2, // Kenarlık kalınlığı
+                      color: Colors.black,
+                      width: 2,
                     ),
                   ),
                   child: Column(

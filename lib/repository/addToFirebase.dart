@@ -3,12 +3,113 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-class AddExercise {
+class AddProgram {
   static CollectionReference programRef(String uid) {
-    return FirebaseFirestore.instance.collection('Users/$uid/Program');
+    return FirebaseFirestore.instance.collection('Users/$uid/Programs');
   }
 
   static Future<void> addProgram(
+    BuildContext context, {
+    required String programAdi,
+  }) async {
+    String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Kullanıcı kimliği alınamadı!'),
+      ));
+      return;
+    }
+
+    if (programAdi.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Lütfen tüm alanları doldurun!'),
+      ));
+      return;
+    }
+
+    CollectionReference ref = programRef(uid);
+    try {
+      DocumentReference docRef = await ref.add({
+        'programAdi': programAdi,
+        'timestamp': FieldValue.serverTimestamp(), // Zaman damgası ekliyoruz
+      });
+      print("Program başarıyla eklendi: ${docRef.id}");
+    } catch (e) {
+      print("Program ekleme hatası: $e");
+    }
+  }
+
+  static Future<void> editProgram(BuildContext context, DocumentSnapshot doc) {
+    final _formKey = GlobalKey<FormState>();
+    String programAdi = doc['programAdi'];
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Programı Düzenle'),
+          content: Form(
+            key: _formKey,
+            child: TextFormField(
+              decoration: InputDecoration(labelText: 'Program Adı'),
+              initialValue: programAdi,
+              onChanged: (value) => programAdi = value,
+              validator: (value) =>
+                  value!.isEmpty ? 'Bu alan boş olamaz.' : null,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  FirebaseFirestore.instance
+                      .collection(
+                          'Users/${FirebaseAuth.instance.currentUser?.uid}/Programs')
+                      .doc(doc.id)
+                      .update({'programAdi': programAdi}).then((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Program başarıyla güncellendi!'),
+                    ));
+                    Navigator.of(context).pop();
+                  }).catchError((error) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Güncelleme hatası: $error'),
+                    ));
+                  });
+                }
+              },
+              child: Text('Güncelle'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  static Future<void> deleteProgram(String programId) async {
+    String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('Users/$uid/Programs')
+          .doc(programId)
+          .delete();
+      // Başarılı silme bildirimi
+      print('Program başarıyla silindi.');
+    } catch (e) {
+      // Hata durumunda bildirim
+      print('Silme hatası: $e');
+    }
+  }
+}
+
+class AddExercise {
+  static CollectionReference exerciseRef(String uid) {
+    return FirebaseFirestore.instance.collection('Users/$uid/Programs');
+  }
+
+  static Future<void> addExercise(
     BuildContext context, {
     required String hareketAdi,
     required String set,
@@ -34,7 +135,7 @@ class AddExercise {
       return;
     }
 
-    CollectionReference ref = programRef(uid);
+    CollectionReference ref = exerciseRef(uid);
     try {
       DocumentReference docRef = await ref.add({
         'hareketAdi': hareketAdi,
@@ -42,9 +143,9 @@ class AddExercise {
         'tekrar': tekrar,
         'agirlik': agirlik,
       });
-      print("Program başarıyla eklendi: ${docRef.id}");
+      print("Egzersiz başarıyla eklendi: ${docRef.id}");
     } catch (e) {
-      print("Program ekleme hatası: $e");
+      print("Egzersiz ekleme hatası: $e");
     }
   }
 
@@ -58,7 +159,7 @@ class AddExercise {
     String? uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    CollectionReference ref = programRef(uid);
+    CollectionReference ref = exerciseRef(uid);
     try {
       await ref.doc(docId).update({
         'hareketAdi': hareketAdi,

@@ -1,9 +1,9 @@
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/exercise.dart';
 import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/home.dart';
 import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/profil.dart';
+import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/programs.dart';
 
 import 'sub_screens/empty.dart';
 import 'sub_screens/istatistik.dart';
@@ -21,14 +21,14 @@ class _AssignerState extends State<Assigner> {
   final List<Widget> _screens = [
     Home(),
     EmptyScreen(),
-    ProgramScreen(),
+    ProgramsScreen(),
     IstatisticScreen(),
     ProfilScreen()
   ];
   final List<String> _screensAppBar = [
     'Home',
     'EmptyScreen',
-    'ProgramScreen',
+    'Programlar',
     'IstatisticScreen',
     'ProfilScreen'
   ];
