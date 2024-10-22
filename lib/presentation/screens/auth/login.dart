@@ -60,44 +60,57 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
 
-        return Scaffold(
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (_toggleIndex == 1) ...[
-                    _buildTextField(
-                      controller: _userNameController,
-                      label: 'Kullanıcı Adı',
-                    ),
+        return SafeArea(
+          child: Scaffold(
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Align(
+                        alignment: Alignment.topCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 16.0),
+                          child: _buildToggleSwitch(),
+                        )),
+                    Expanded(
+                        child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_toggleIndex == 1) ...[
+                          _buildTextField(
+                            controller: _userNameController,
+                            label: 'Kullanıcı Adı',
+                          ),
+                        ],
+                        _buildTextField(
+                          controller: _emailController,
+                          label: 'Email',
+                        ),
+                        _buildPasswordField(),
+                        SizedBox(height: 20),
+                        _buildActionButton(),
+                        ElevatedButton(
+                          onPressed: () async {
+                            bool isSuccess =
+                                await SignInWithGoogle.signIn(context);
+                            if (isSuccess) {
+                              Get.to(Assigner());
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Giriş yapılamadı, lütfen tekrar deneyin.')),
+                              );
+                            }
+                          },
+                          child: Text('Login with Google'),
+                        ),
+                      ],
+                    )),
                   ],
-                  _buildTextField(
-                    controller: _emailController,
-                    label: 'Email',
-                  ),
-                  _buildPasswordField(),
-                  SizedBox(height: 20),
-                  _buildActionButton(),
-                  ElevatedButton(
-                    onPressed: () async {
-                      bool isSuccess = await SignInWithGoogle.signIn(context);
-                      if (isSuccess) {
-                        Get.to(Assigner());
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(
-                                  'Giriş yapılamadı, lütfen tekrar deneyin.')),
-                        );
-                      }
-                    },
-                    child: Text('Login with Google'),
-                  ),
-                  SizedBox(height: 20),
-                  _buildToggleSwitch(),
-                ],
+                ),
               ),
             ),
           ),

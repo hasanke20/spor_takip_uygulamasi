@@ -3,12 +3,18 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-class AddProgram {
+class AddExercise {
   static CollectionReference programRef(String uid) {
     return FirebaseFirestore.instance.collection('Users/$uid/Program');
   }
 
-  static Future<void> addProgram(BuildContext context) async {
+  static Future<void> addProgram(
+    BuildContext context, {
+    required String hareketAdi,
+    required String set,
+    required String tekrar,
+    required String agirlik,
+  }) async {
     String? uid = FirebaseAuth.instance.currentUser?.uid;
 
     if (uid == null) {
@@ -17,24 +23,52 @@ class AddProgram {
       ));
       return;
     }
+
+    if (hareketAdi.isEmpty ||
+        set.isEmpty ||
+        tekrar.isEmpty ||
+        agirlik.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Lütfen tüm alanları doldurun!'),
+      ));
+      return;
+    }
+
     CollectionReference ref = programRef(uid);
     try {
       DocumentReference docRef = await ref.add({
-        'Agirlik': 72,
-        'Tarih': DateTime.now(),
-        // Diğer verileri buraya ekleyebilirsiniz
+        'hareketAdi': hareketAdi,
+        'set': set,
+        'tekrar': tekrar,
+        'agirlik': agirlik,
       });
-
-      // Belge ID'sini yazdırın
-      print('Yeni Program Belgesi ID: ${docRef.id}');
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Program başarıyla eklendi!'),
-      ));
+      print("Program başarıyla eklendi: ${docRef.id}");
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Veri eklerken hata oluştu: $e'),
-      ));
+      print("Program ekleme hatası: $e");
+    }
+  }
+
+  static Future<void> editExercise(
+    String docId,
+    String hareketAdi,
+    String set,
+    String tekrar,
+    String agirlik,
+  ) async {
+    String? uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    CollectionReference ref = programRef(uid);
+    try {
+      await ref.doc(docId).update({
+        'hareketAdi': hareketAdi,
+        'set': set,
+        'tekrar': tekrar,
+        'agirlik': agirlik,
+      });
+      print("Program başarıyla güncellendi: $docId");
+    } catch (e) {
+      print("Program güncelleme hatası: $e");
     }
   }
 }
