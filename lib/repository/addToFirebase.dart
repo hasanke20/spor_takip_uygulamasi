@@ -39,92 +39,59 @@ class AddProgram {
       print("Program ekleme hatası: $e");
     }
   }
-
-  static Future<void> editProgram(BuildContext context, DocumentSnapshot doc) {
-    final _formKey = GlobalKey<FormState>();
-    String programAdi = doc['programAdi'];
-
-    return showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Programı Düzenle'),
-          content: Form(
-            key: _formKey,
-            child: TextFormField(
-              decoration: InputDecoration(labelText: 'Program Adı'),
-              initialValue: programAdi,
-              onChanged: (value) => programAdi = value,
-              validator: (value) =>
-                  value!.isEmpty ? 'Bu alan boş olamaz.' : null,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  FirebaseFirestore.instance
-                      .collection(
-                          'Users/${FirebaseAuth.instance.currentUser?.uid}/Programs')
-                      .doc(doc.id)
-                      .update({'programAdi': programAdi}).then((_) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Program başarıyla güncellendi!'),
-                    ));
-                    Navigator.of(context).pop();
-                  }).catchError((error) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Güncelleme hatası: $error'),
-                    ));
-                  });
-                }
-              },
-              child: Text('Güncelle'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  static Future<void> deleteProgram(String programId) async {
-    String? uid = FirebaseAuth.instance.currentUser?.uid;
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('Users/$uid/Programs')
-          .doc(programId)
-          .delete();
-      // Başarılı silme bildirimi
-      print('Program başarıyla silindi.');
-    } catch (e) {
-      // Hata durumunda bildirim
-      print('Silme hatası: $e');
-    }
-  }
 }
 
 class AddExercise {
-  static CollectionReference exerciseRef(String uid) {
-    return FirebaseFirestore.instance.collection('Users/$uid/Programs');
+  static CollectionReference exerciseRef(String uid, String programId) {
+    return FirebaseFirestore.instance
+        .collection('Users/$uid/Programs/$programId/Exercises');
   }
 
-  static Future<void> addExercise(
-    BuildContext context, {
+  static Future<bool> addExercise(
+    BuildContext context,
+    String uid,
+    String programId, {
     required String hareketAdi,
     required String set,
     required String tekrar,
     required String agirlik,
   }) async {
-    String? uid = FirebaseAuth.instance.currentUser?.uid;
-
-    if (uid == null) {
+    if (hareketAdi.isEmpty ||
+        set.isEmpty ||
+        tekrar.isEmpty ||
+        agirlik.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Kullanıcı kimliği alınamadı!'),
+        content: Text('Lütfen tüm alanları doldurun!'),
       ));
-      return;
+      return false; // Başarısız olduğu için false döndürüyoruz
     }
 
+    try {
+      await exerciseRef(uid, programId).add({
+        'hareketAdi': hareketAdi,
+        'set': set,
+        'tekrar': tekrar,
+        'agirlik': agirlik,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      return true; // Başarılı olduğu için true döndürüyoruz
+    } catch (e) {
+      print("Egzersiz ekleme hatası: $e");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Egzersiz ekleme hatası!'),
+      ));
+      return false; // Başarısız olduğu için false döndürüyoruz
+    }
+  }
+
+  static Future<void> editExercise(
+    BuildContext context,
+    DocumentSnapshot exercise, {
+    required String hareketAdi,
+    required String set,
+    required String tekrar,
+    required String agirlik,
+  }) async {
     if (hareketAdi.isEmpty ||
         set.isEmpty ||
         tekrar.isEmpty ||
@@ -135,41 +102,35 @@ class AddExercise {
       return;
     }
 
-    CollectionReference ref = exerciseRef(uid);
     try {
-      DocumentReference docRef = await ref.add({
+      await exercise.reference.update({
         'hareketAdi': hareketAdi,
         'set': set,
         'tekrar': tekrar,
         'agirlik': agirlik,
       });
-      print("Egzersiz başarıyla eklendi: ${docRef.id}");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Egzersiz başarıyla güncellendi!'),
+      ));
     } catch (e) {
-      print("Egzersiz ekleme hatası: $e");
+      print("Egzersiz güncelleme hatası: $e");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Egzersiz güncelleme hatası!'),
+      ));
     }
   }
 
-  static Future<void> editExercise(
-    String docId,
-    String hareketAdi,
-    String set,
-    String tekrar,
-    String agirlik,
-  ) async {
-    String? uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
-    CollectionReference ref = exerciseRef(uid);
+  static Future<void> deleteExercise(
+      BuildContext context, DocumentSnapshot exercise) async {
     try {
-      await ref.doc(docId).update({
-        'hareketAdi': hareketAdi,
-        'set': set,
-        'tekrar': tekrar,
-        'agirlik': agirlik,
-      });
-      print("Program başarıyla güncellendi: $docId");
+      await exercise.reference.delete();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Egzersiz başarıyla silindi!'),
+      ));
     } catch (e) {
-      print("Program güncelleme hatası: $e");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Silme işlemi sırasında hata oluştu: $e'),
+      ));
     }
   }
 }
@@ -300,24 +261,3 @@ class LoginUser {
     }
   }
 }
-
-/*class AddNewUser {
-  static CollectionReference usersRef =
-  FirebaseFirestore.instance.collection('Users');
-
-  static Future<void> addNewUser(BuildContext context) async {
-    try {
-      await usersRef.add({
-        'name': 'Ilk Uye',
-        // Diğer verileri buraya ekleyebilirsiniz
-      });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Kullanıcı başarıyla eklendi!'),
-      ));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Veri eklerken hata oluştu: $e'),
-      ));
-    }
-  }
-}*/

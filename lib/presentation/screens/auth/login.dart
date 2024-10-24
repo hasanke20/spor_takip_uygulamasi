@@ -52,16 +52,21 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
+            backgroundColor: Colors.black,
             body: Center(child: CircularProgressIndicator()),
           );
         } else if (snapshot.hasError) {
           return Scaffold(
-            body: Center(child: Text('Hata: Firebase başlatılamadı!')),
+            backgroundColor: Colors.black,
+            body: Center(
+                child: Text('Hata: Firebase başlatılamadı!',
+                    style: TextStyle(color: Colors.red))),
           );
         }
 
         return SafeArea(
           child: Scaffold(
+            backgroundColor: Colors.black, // Arka plan rengi
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -69,46 +74,56 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Align(
-                        alignment: Alignment.topCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 16.0),
-                          child: _buildToggleSwitch(),
-                        )),
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: _buildToggleSwitch(),
+                      ),
+                    ),
                     Expanded(
-                        child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (_toggleIndex == 1) ...[
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (_toggleIndex == 1) ...[
+                            _buildTextField(
+                              controller: _userNameController,
+                              label: 'Kullanıcı Adı',
+                            ),
+                          ],
                           _buildTextField(
-                            controller: _userNameController,
-                            label: 'Kullanıcı Adı',
+                            controller: _emailController,
+                            label: 'Email',
+                          ),
+                          _buildPasswordField(),
+                          SizedBox(height: 20),
+                          _buildActionButton(),
+                          SizedBox(height: 20),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent, // Buton rengi
+                            ),
+                            onPressed: () async {
+                              bool isSuccess =
+                                  await SignInWithGoogle.signIn(context);
+                              if (isSuccess) {
+                                Get.to(Assigner());
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(
+                                          'Giriş yapılamadı, lütfen tekrar deneyin.')),
+                                );
+                              }
+                            },
+                            child: Text(
+                              'Google ile Giriş Yap',
+                              style:
+                                  TextStyle(color: Colors.white), // Metin rengi
+                            ),
                           ),
                         ],
-                        _buildTextField(
-                          controller: _emailController,
-                          label: 'Email',
-                        ),
-                        _buildPasswordField(),
-                        SizedBox(height: 20),
-                        _buildActionButton(),
-                        ElevatedButton(
-                          onPressed: () async {
-                            bool isSuccess =
-                                await SignInWithGoogle.signIn(context);
-                            if (isSuccess) {
-                              Get.to(Assigner());
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        'Giriş yapılamadı, lütfen tekrar deneyin.')),
-                              );
-                            }
-                          },
-                          child: Text('Login with Google'),
-                        ),
-                      ],
-                    )),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -124,17 +139,28 @@ class _LoginScreenState extends State<LoginScreen> {
       width: (MediaQuery.of(context).size.width * 3) / 5,
       child: TextFormField(
         controller: _passwordController,
+        style: TextStyle(color: Colors.white), // Metin rengi
         decoration: InputDecoration(
           labelText: 'Şifre',
+          labelStyle: TextStyle(color: Colors.white), // Etiket rengi
           suffixIcon: IconButton(
             icon: Icon(
               _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+              color: Colors.white, // Suffix ikon rengi
             ),
             onPressed: () {
               setState(() {
                 _isPasswordVisible = !_isPasswordVisible;
               });
             },
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide:
+                BorderSide(color: Colors.grey), // Aktif olmayan kenar rengi
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide:
+                BorderSide(color: Colors.blueAccent), // Aktif kenar rengi
           ),
         ),
         obscureText: !_isPasswordVisible,
@@ -151,7 +177,19 @@ class _LoginScreenState extends State<LoginScreen> {
       width: (MediaQuery.of(context).size.width * 3) / 5,
       child: TextFormField(
         controller: controller,
-        decoration: InputDecoration(labelText: label),
+        style: TextStyle(color: Colors.white), // Metin rengi
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.white), // Etiket rengi
+          enabledBorder: UnderlineInputBorder(
+            borderSide:
+                BorderSide(color: Colors.grey), // Aktif olmayan kenar rengi
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide:
+                BorderSide(color: Colors.blueAccent), // Aktif kenar rengi
+          ),
+        ),
         obscureText: obscureText,
       ),
     );
@@ -161,16 +199,15 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextButton(
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.black,
+          color: Colors.blueAccent, // Buton rengi
           borderRadius: BorderRadius.circular(20.0),
         ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Text(
-            _toggleIndex == 1 ? 'Sign in' : 'Login',
+            _toggleIndex == 1 ? 'Kayıt Ol' : 'Giriş Yap',
             style: TextStyle(
-              backgroundColor: Colors.black,
-              color: Colors.white,
+              color: Colors.white, // Metin rengi
             ),
           ),
         ),
@@ -222,13 +259,13 @@ class _LoginScreenState extends State<LoginScreen> {
       initialLabelIndex: _toggleIndex,
       cornerRadius: 20.0,
       activeFgColor: Colors.white,
-      inactiveBgColor: Colors.white,
-      inactiveFgColor: Colors.black,
+      inactiveBgColor: Colors.grey[800], // Pasif durum arka plan rengi
+      inactiveFgColor: Colors.white, // Pasif durum metin rengi
       totalSwitches: 2,
-      labels: ['Login', 'Sign in'],
+      labels: ['Giriş', 'Kayıt Ol'],
       activeBgColors: [
-        [Colors.black],
-        [Colors.black]
+        [Colors.blueAccent], // Aktif durum arka plan rengi
+        [Colors.blueAccent]
       ],
       onToggle: (index) {
         print('switched to: $index');
