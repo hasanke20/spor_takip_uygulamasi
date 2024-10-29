@@ -259,12 +259,12 @@ class _LoginScreenState extends State<LoginScreen> {
       initialLabelIndex: _toggleIndex,
       cornerRadius: 20.0,
       activeFgColor: Colors.white,
-      inactiveBgColor: Colors.grey[800], // Pasif durum arka plan rengi
-      inactiveFgColor: Colors.white, // Pasif durum metin rengi
+      inactiveBgColor: Colors.grey[800],
+      inactiveFgColor: Colors.white,
       totalSwitches: 2,
       labels: ['Giriş', 'Kayıt Ol'],
       activeBgColors: [
-        [Colors.blueAccent], // Aktif durum arka plan rengi
+        [Colors.blueAccent],
         [Colors.blueAccent]
       ],
       onToggle: (index) {

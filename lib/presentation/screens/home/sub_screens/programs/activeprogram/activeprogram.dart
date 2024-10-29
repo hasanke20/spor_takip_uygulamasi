@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:spor_takip_uygulamasi/repository/addToFirebase.dart';
 
 class ActiveProgram extends StatefulWidget {
   final String programId;
@@ -18,12 +19,27 @@ class _ActiveProgramState extends State<ActiveProgram> {
   void getExercises() async {
     String? uid = FirebaseAuth.instance.currentUser?.uid;
     String programId = widget.programId;
+
+    DocumentSnapshot programSnapshot = await FirebaseFirestore.instance
+        .collection('Users/$uid/Programs/')
+        .doc(programId)
+        .get();
+
+    if (!programSnapshot.exists) {
+      print('Program mevcut değil.');
+      return;
+    }
+
+    String programAdi = programSnapshot['programAdi'];
+    String programIdFromSnapshot = programSnapshot.id; // Program ID'yi al
+
     QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection('Users/$uid/Programs/$programId/Exercises')
-        .orderBy('timestamp') // Tarihe göre sıralama
+        .orderBy('timestamp')
         .get();
+
     setState(() {
-      exercises = snapshot.docs.toList(); // Tarihe göre sıralama yapıldı
+      exercises = snapshot.docs.toList();
     });
   }
 
@@ -33,153 +49,217 @@ class _ActiveProgramState extends State<ActiveProgram> {
     getExercises();
   }
 
+  Future<bool> _onWillPop() async {
+    return (await showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              backgroundColor: Colors.grey[900],
+              title: Text('Çıkış yapmak istediğinize emin misiniz?',
+                  style: TextStyle(color: Colors.white)),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  child:
+                      Text('Geri Dön', style: TextStyle(color: Colors.white)),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  child: Text('Çıkış', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            );
+          },
+        )) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black87,
-        leadingWidth: 80,
-        leading: Container(
-          margin: EdgeInsets.all(8.0),
-          decoration: BoxDecoration(
-            color: Colors.red,
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          child: TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text(
-              'Çıkış',
-              style: TextStyle(color: Colors.white),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.black87,
+          leadingWidth: 80,
+          leading: Container(
+            margin: EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(12.0),
             ),
-          ),
-        ),
-        title: Text(
-          'Aktif Program',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-      body: exercises.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '${currentIndex + 1}/${exercises.length}',
-                    style: TextStyle(fontSize: 30, color: Colors.white),
-                  ),
-                  Container(
-                    width: 250,
-                    child: Card(
-                      color: Colors.grey[850],
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              exercises[currentIndex]['hareketAdi'],
-                              style:
-                                  TextStyle(fontSize: 24, color: Colors.white),
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              'Set: ${exercises[currentIndex]['set']}',
-                              style:
-                                  TextStyle(fontSize: 20, color: Colors.white),
-                            ),
-                            Text(
-                              'Tekrar: ${exercises[currentIndex]['tekrar']}',
-                              style:
-                                  TextStyle(fontSize: 20, color: Colors.white),
-                            ),
-                            Text(
-                              'Ağırlık: ${exercises[currentIndex]['agirlik']}',
-                              style:
-                                  TextStyle(fontSize: 20, color: Colors.white),
-                            ),
-                          ],
+            child: TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      backgroundColor: Colors.grey[900],
+                      title: Text('Çıkış yapmak istediğinize emin misiniz?',
+                          style: TextStyle(color: Colors.white)),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('Geri Dön',
+                              style: TextStyle(color: Colors.white)),
                         ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 100),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        margin: EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[850],
-                          borderRadius: BorderRadius.circular(12.0),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            Navigator.pop(context);
+                          },
+                          child: Text('Çıkış',
+                              style: TextStyle(color: Colors.red)),
                         ),
-                        child: TextButton(
-                          onPressed: currentIndex == 0
-                              ? null
-                              : () {
-                                  setState(() {
-                                    currentIndex--;
-                                  });
-                                },
-                          child: Text(
-                            'Geri',
-                            style: TextStyle(
-                              color: currentIndex == 0
-                                  ? Colors.grey[600]
-                                  : Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[850],
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        child: TextButton(
-                          onPressed: currentIndex == exercises.length - 1
-                              ? null
-                              : () {
-                                  setState(() {
-                                    currentIndex++;
-                                  });
-                                },
-                          child: Text(
-                            'İleri',
-                            style: TextStyle(
-                              color: currentIndex == exercises.length - 1
-                                  ? Colors.grey[600]
-                                  : Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (currentIndex == exercises.length - 1)
-                    Container(
-                      margin: EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[850],
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: Text(
-                          'Programı Bitir',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                ],
+                      ],
+                    );
+                  },
+                );
+              },
+              child: Text(
+                'Çıkış',
+                style: TextStyle(color: Colors.white),
               ),
             ),
+          ),
+          title: Text(
+            'Aktif Program',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        body: exercises.isEmpty
+            ? Center(child: CircularProgressIndicator())
+            : Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${currentIndex + 1}/${exercises.length}',
+                      style: TextStyle(fontSize: 30, color: Colors.white),
+                    ),
+                    Container(
+                      width: 250,
+                      child: Card(
+                        color: Colors.grey[850],
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                exercises[currentIndex]['hareketAdi'],
+                                style: TextStyle(
+                                    fontSize: 24, color: Colors.white),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                'Set: ${exercises[currentIndex]['set']}',
+                                style: TextStyle(
+                                    fontSize: 20, color: Colors.white),
+                              ),
+                              Text(
+                                'Tekrar: ${exercises[currentIndex]['tekrar']}',
+                                style: TextStyle(
+                                    fontSize: 20, color: Colors.white),
+                              ),
+                              Text(
+                                'Ağırlık: ${exercises[currentIndex]['agirlik']}',
+                                style: TextStyle(
+                                    fontSize: 20, color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 100),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          margin: EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[850],
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          child: TextButton(
+                            onPressed: currentIndex == 0
+                                ? null
+                                : () {
+                                    setState(() {
+                                      currentIndex--;
+                                    });
+                                  },
+                            child: Text(
+                              'Geri',
+                              style: TextStyle(
+                                color: currentIndex == 0
+                                    ? Colors.grey[600]
+                                    : Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          margin: EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[850],
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          child: TextButton(
+                            onPressed: currentIndex == exercises.length - 1
+                                ? null
+                                : () {
+                                    setState(() {
+                                      currentIndex++;
+                                    });
+                                  },
+                            child: Text(
+                              'İleri',
+                              style: TextStyle(
+                                color: currentIndex == exercises.length - 1
+                                    ? Colors.grey[600]
+                                    : Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (currentIndex == exercises.length - 1)
+                      Container(
+                        margin: EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[850],
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        child: TextButton(
+                          onPressed: () {
+                            String programId = widget.programId;
+
+                            LastProgram lastProgramInstance = LastProgram();
+
+                            lastProgramInstance.lastProgram(programId);
+
+                            Navigator.pop(context);
+                          },
+                          child: Text(
+                            'Programı Bitir',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+      ),
     );
   }
 }

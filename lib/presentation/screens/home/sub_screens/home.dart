@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'programs/exercises/exercise.dart';
+
 class Home extends StatefulWidget {
   const Home({super.key});
 
@@ -10,35 +12,85 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  String? selectedItem;
-  List<Map<String, String>> items = []; // program adı ve id'yi tutacak
-  String? uid;
+  List<Map<String, dynamic>> programs = [];
+  String? nextProgramName;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPrograms();
+  }
+
+  Future<void> _fetchPrograms() async {
+    String? uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      QuerySnapshot programSnapshot = await FirebaseFirestore.instance
+          .collection('Users/$uid/Programs')
+          .orderBy('timestamp')
+          .get();
+
+      programs = programSnapshot.docs.map((doc) {
+        return {
+          'programId': doc.id,
+          'programAdi': doc['programAdi'],
+          'timestamp': doc['timestamp'] as Timestamp,
+        };
+      }).toList();
+
+      print("Program Sayısı: ${programs.length}");
+      programs.forEach((program) {
+        print(
+            "Program ID: ${program['programId']}, Program Adı: ${program['programAdi']}, Timestamp: ${program['timestamp']}");
+      });
+
+      // Son programı bul
+      await _fetchNextProgram();
+    }
+  }
+
+  Future<void> _fetchNextProgram() async {
+    String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+    DocumentSnapshot lastProgramSnapshot = await FirebaseFirestore.instance
+        .collection('Users/$uid/Values')
+        .doc('LastProgram')
+        .get();
+
+    if (!lastProgramSnapshot.exists) {
+      print("LastProgram belgesi bulunamadı.");
+      nextProgramName = 'Program Yok';
+      setState(() {});
+      return;
+    }
+
+    String? lastProgramId = lastProgramSnapshot['programId'];
+
+    int lastProgramIndex =
+        programs.indexWhere((program) => program['programId'] == lastProgramId);
+
+    if (lastProgramIndex != -1) {
+      programs.sort((a, b) =>
+          (a['timestamp'] as Timestamp).compareTo(b['timestamp'] as Timestamp));
+
+      if (lastProgramIndex == programs.length - 1) {
+        nextProgramName = programs[0]['programAdi'];
+      } else {
+        nextProgramName = programs[lastProgramIndex + 1]['programAdi'];
+      }
+    } else {
+      nextProgramName =
+          programs.isNotEmpty ? programs[0]['programAdi'] : 'Program Yok';
+    }
+
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.black, // Arka plan rengini siyah yap
-        body: StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('Users/$uid/Programs')
-              .orderBy('timestamp', descending: false)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
-
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return Center(
-                  child: Text('Program yok.',
-                      style: TextStyle(color: Colors.white)));
-            }
-
-            return Column();
-          },
-        ),
-        floatingActionButton: Center(
+        backgroundColor: Colors.black,
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -46,45 +98,32 @@ class _HomeState extends State<Home> {
                 width: 250,
                 height: 150,
                 child: Card(
-                  color: Colors.grey[800], // Kart rengini koyu gri yap
+                  color: Colors.grey[800],
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         'Hemen Spor Yapmaya Başla!',
-                        style: TextStyle(
-                            fontSize: 24,
-                            color: Colors.white), // Yazı rengini beyaz yap
+                        style: TextStyle(fontSize: 24, color: Colors.white),
                       ),
                       SizedBox(height: 20),
-                      DropdownButton<String>(
-                        hint: Text('Bir seçenek seçin',
-                            style: TextStyle(color: Colors.white)),
-                        value: selectedItem,
-                        isExpanded: true,
-                        dropdownColor:
-                            Colors.grey[800], // Açılır menü arka plan rengi
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedItem = newValue;
-                          });
-                          if (newValue != null) {
-                            final selectedProgram = items.firstWhere(
-                                (item) => item['programAdi'] == newValue);
-                            // _navigateToExerciseScreen(selectedProgram['programId']);
+                      TextButton(
+                        onPressed: () {
+                          if (nextProgramName != null) {
+                            String programId = programs.firstWhere((program) =>
+                                program['programAdi'] ==
+                                nextProgramName)['programId'];
+                            _navigateToExerciseScreen(programId);
                           }
                         },
-                        items: items.map<DropdownMenuItem<String>>(
-                            (Map<String, String> value) {
-                          return DropdownMenuItem<String>(
-                            value: value['programAdi'],
-                            child: Text(value['programAdi']!,
-                                style: TextStyle(
-                                    color: Colors
-                                        .white)), // Yazı rengini beyaz yap
-                          );
-                        }).toList(),
-                      ),
+                        child: Text(
+                          nextProgramName ?? 'Program Yok',
+                          style: TextStyle(
+                            color: Colors.white,
+                            backgroundColor: Colors.black,
+                          ),
+                        ),
+                      )
                     ],
                   ),
                 ),
@@ -96,39 +135,12 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Future<void> _fetchPrograms() async {
-    if (uid != null) {
-      final QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('Users/$uid/Programs')
-          .orderBy('timestamp', descending: false)
-          .get();
-
-      setState(() {
-        items = snapshot.docs.map((doc) {
-          return {
-            'programAdi': doc['programAdi'] as String,
-            'programId': doc.id
-          };
-        }).toList();
-      });
-    }
-  }
-
-  /*void _navigateToExerciseScreen(String? programId) {
+  void _navigateToExerciseScreen(String programId) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            ExerciseScreen(programId: programId), // programId'yi geçir
+        builder: (context) => ExerciseScreen(programId: programId),
       ),
     );
-  }*/
-
-  @override
-  void initState() {
-    super.initState();
-
-    uid = FirebaseAuth.instance.currentUser?.uid;
-    _fetchPrograms();
   }
 }

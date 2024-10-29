@@ -32,7 +32,7 @@ class AddProgram {
     try {
       DocumentReference docRef = await ref.add({
         'programAdi': programAdi,
-        'timestamp': FieldValue.serverTimestamp(), // Zaman damgası ekliyoruz
+        'timestamp': FieldValue.serverTimestamp(),
       });
       print("Program başarıyla eklendi: ${docRef.id}");
     } catch (e) {
@@ -131,6 +131,25 @@ class AddExercise {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Silme işlemi sırasında hata oluştu: $e'),
       ));
+    }
+  }
+}
+
+class LastProgram {
+  final String? uid;
+
+  LastProgram() : uid = FirebaseAuth.instance.currentUser?.uid;
+
+  Future<void> lastProgram(String programId) async {
+    if (uid != null) {
+      await FirebaseFirestore.instance
+          .collection('Users/$uid/Values')
+          .doc('LastProgram')
+          .set({
+        'programId': programId,
+      });
+    } else {
+      print('Kullanıcı kimliği bulunamadı.');
     }
   }
 }

@@ -221,7 +221,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
             TextButton(
               onPressed: () async {
                 await _deleteProgram(programId);
-                Navigator.of(context).pop(); // Onay sonrası dialog kapansın
+                Navigator.of(context).pop();
               },
               child: Text(
                 'Evet',
