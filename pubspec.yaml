@@ -45,6 +45,7 @@ dependencies:
   toggle_switch: ^2.3.0
   google_fonts: ^6.2.1
   multi_dropdown: ^3.0.1
+  syncfusion_flutter_charts: ^27.1.57
 
 dev_dependencies:
   flutter_test:

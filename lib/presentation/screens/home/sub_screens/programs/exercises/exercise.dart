@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/programs/activeprogram/activeprogram.dart';
 
-import '../../../../../../repository/addToFirebase.dart';
-
 class ExerciseScreen extends StatefulWidget {
   final String programId;
 
@@ -20,13 +18,29 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
   final TextEditingController _setController = TextEditingController();
   final TextEditingController _tekrarController = TextEditingController();
   final TextEditingController _agirlikController = TextEditingController();
+  final TextEditingController _donguController = TextEditingController();
+
   String? uid;
-  Map<String, TextEditingController> controllers = {};
+  int completedCycles = 0;
 
   @override
   void initState() {
     super.initState();
     uid = FirebaseAuth.instance.currentUser?.uid;
+    _fetchCompletedCycles(); // Tamamlanan döngü verisini çek
+  }
+
+  Future<void> _fetchCompletedCycles() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('Users/$uid/Programs/${widget.programId}/Dongu')
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      setState(() {
+        completedCycles =
+            snapshot.docs.length; // Tamamlanan döngü sayısını güncelle
+      });
+    }
   }
 
   @override
@@ -35,9 +49,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     _setController.dispose();
     _tekrarController.dispose();
     _agirlikController.dispose();
-    for (var controller in controllers.values) {
-      controller.dispose();
-    }
+    _donguController.dispose();
     super.dispose();
   }
 
@@ -45,9 +57,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: GestureDetector(
-        onTap: () {
-          // FocusScope.of(context).unfocus();
-        },
+        onTap: () {},
         child: Scaffold(
           backgroundColor: Colors.black,
           appBar: AppBar(
@@ -65,6 +75,51 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
           ),
           body: Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800],
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: Text(
+                        'Tamamlanan Döngü: $completedCycles',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    Spacer(),
+                    Container(
+                      width: 80,
+                      child: TextField(
+                        controller: _donguController,
+                        style: TextStyle(color: Colors.white),
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Döngü',
+                          labelStyle: TextStyle(color: Colors.white),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Spacer(),
+                    ElevatedButton(
+                      onPressed: _updateCycles,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                      ),
+                      child: Text(
+                        'Kaydet',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
@@ -94,17 +149,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       itemCount: exerciseData.length,
                       itemBuilder: (context, index) {
                         var exercise = exerciseData[index];
-                        if (index == 0) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              buildCycleController(context),
-                              buildExerciseCard(context, exercise),
-                            ],
-                          );
-                        } else {
-                          return buildExerciseCard(context, exercise);
-                        }
+                        return buildExerciseCard(context, exercise);
                       },
                     );
                   },
@@ -136,42 +181,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     );
   }
 
-  Widget buildCycleController(BuildContext context) {
-    return Row(children: [
-      SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-      Flexible(
-        flex: 1,
-        child: Container(
-            decoration: BoxDecoration(
-                color: Colors.grey.shade700,
-                borderRadius: BorderRadius.all(Radius.circular(20))),
-            child: TextField(
-              keyboardType: TextInputType.number,
-            )),
-      ),
-      Flexible(
-        flex: 1,
-        child: Container(
-            decoration: BoxDecoration(
-                color: Colors.grey.shade700,
-                borderRadius: BorderRadius.all(Radius.circular(20))),
-            child: TextField(keyboardType: TextInputType.number)),
-      ),
-      Flexible(
-        flex: 1,
-        child: FilledButton.tonal(
-            onPressed: () {},
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Text("Arttir"),
-            )),
-      ),
-      SizedBox(width: MediaQuery.of(context).size.width * 0.05)
-    ]);
-  }
-
   Widget buildExerciseCard(BuildContext context, DocumentSnapshot exercise) {
-    final String exerciseId = exercise.id;
+    final TextEditingController kiloGirisController = TextEditingController();
 
     return Card(
       margin: EdgeInsets.all(10),
@@ -189,11 +200,49 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     color: Colors.white),
               ),
             ),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade700,
+                borderRadius:
+                    BorderRadius.all(Radius.circular(20)), // Köşe yuvarlama
+              ),
+              width: 50,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4),
+                child: TextField(
+                  controller: kiloGirisController,
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20), // Yazı boyutunu ayarlayın
+                  textAlign: TextAlign.center, // Ortaya hizalama
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: 'Kilo',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    border: InputBorder.none,
+                  ),
+                  onSubmitted: (value) async {
+                    if (value.isNotEmpty) {
+                      int additionalWeight = int.parse(value);
+                      int existingWeight = int.parse(exercise['agirlik']);
+                      int updatedWeight = existingWeight + additionalWeight;
+                      await exercise.reference
+                          .update({'agirlik': updatedWeight});
+                    }
+                  },
+                ),
+              ),
+            ),
+            SizedBox(width: 10),
             IconButton(
-              icon: Icon(Icons.delete, color: Colors.white),
-              onPressed: () async {
-                await _confirmDelete(context, exercise);
+              icon: Icon(Icons.edit, color: Colors.white),
+              onPressed: () {
+                _editExercise(context, exercise);
               },
+            ),
+            IconButton(
+              icon: Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _showDeleteConfirmation(context, exercise),
             ),
           ],
         ),
@@ -201,171 +250,141 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             buildEditableField(
-                context, exercise, exerciseId, 'set', Colors.grey.shade400),
+                context, exercise, exercise.id, 'set', Colors.grey.shade400),
             SizedBox(width: 5),
             Text('x', style: TextStyle(color: Colors.white, fontSize: 30)),
             SizedBox(width: 10),
             buildEditableField(
-                context, exercise, exerciseId, 'tekrar', Colors.grey.shade400),
+                context, exercise, exercise.id, 'tekrar', Colors.grey.shade400),
             SizedBox(width: 10),
             buildEditableField(
-                context, exercise, exerciseId, 'agirlik', Colors.white),
+                context, exercise, exercise.id, 'agirlik', Colors.white),
             SizedBox(width: 10),
-            Text('KG', style: TextStyle(color: Colors.white, fontSize: 30)),
-            Spacer()
+            Text('kg', style: TextStyle(color: Colors.white, fontSize: 30)),
           ],
         ),
       ),
     );
   }
 
-  Widget buildEditableField(
-    BuildContext context,
-    DocumentSnapshot exercise,
-    String exerciseId,
-    String field,
-    Color color,
-  ) {
-    if (!controllers.containsKey(exerciseId + field)) {
-      controllers[exerciseId + field] =
-          TextEditingController(text: exercise[field].toString());
-    }
-
-    final text = controllers[exerciseId + field]!.text;
-    final textStyle = TextStyle(fontSize: 30, color: color);
-    final textPainter = TextPainter(
-      text: TextSpan(text: text, style: textStyle),
-      maxLines: 1,
-      textDirection: TextDirection.ltr,
-    );
-
-    textPainter.layout();
-    final FocusNode nodefocus = FocusNode();
+  Widget buildEditableField(BuildContext context, DocumentSnapshot exercise,
+      String exerciseId, String field, Color color) {
     return Flexible(
       flex: 2,
       child: Container(
         decoration: BoxDecoration(
-            color: Colors.grey.shade700,
-            borderRadius: BorderRadius.all(Radius.circular(20))),
-        // width: textPainter.width,
+          color: Colors.grey.shade700,
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+        ),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 4),
           child: TextField(
             textAlign: TextAlign.center,
-            controller: controllers[exerciseId + field],
+            controller: TextEditingController(text: exercise[field].toString()),
             keyboardType: TextInputType.number,
-            style: textStyle,
-            focusNode: nodefocus,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-            ),
-            // onChanged: (updatedValue) {
-            //   if (field == 'set' || field == 'tekrar') {
-            //     if (updatedValue.length > 2) {
-            //       controllers[exerciseId + field]!.text =
-            //           updatedValue.substring(0, 2);
-            //       controllers[exerciseId + field]!.selection =
-            //           TextSelection.fromPosition(TextPosition(offset: 2));
-            //     }
-            //   } else if (field == 'agirlik') {
-            //     if (updatedValue.length > 4) {
-            //       controllers[exerciseId + field]!.text =
-            //           updatedValue.substring(0, 4);
-            //       controllers[exerciseId + field]!.selection =
-            //           TextSelection.fromPosition(TextPosition(offset: 4));
-            //     }
-            //   }
-            // },
+            style: TextStyle(fontSize: 30, color: color),
+            decoration: InputDecoration(border: InputBorder.none),
             onSubmitted: (updatedValue) async {
               if (updatedValue.isNotEmpty) {
                 await exercise.reference.update({field: updatedValue});
               }
-              nodefocus.unfocus();
             },
-            // onEditingComplete: () async {
-            //   final updatedValue = controllers[exerciseId + field]!.text;
-            //   if (updatedValue.isNotEmpty) {
-            //     await exercise.reference.update({field: updatedValue});
-            //   }
-            // },
           ),
         ),
       ),
     );
   }
 
-  Future<void> _confirmDelete(
+  Future<void> _updateCycles() async {
+    if (_donguController.text.isNotEmpty) {
+      int newCycles = int.parse(_donguController.text);
+      setState(() {
+        completedCycles += newCycles; // Güncellenen döngü sayısını artır
+      });
+
+      // Tamamlanan döngüleri Firestore'a ekle
+      for (int i = 0; i < newCycles; i++) {
+        await FirebaseFirestore.instance
+            .collection('Users/$uid/Programs/${widget.programId}/Dongu')
+            .add({
+          'completedAt': FieldValue.serverTimestamp(), // Tamamlanma zamanı
+        });
+      }
+
+      _donguController.clear(); // TextField'i temizle
+    }
+  }
+
+  Future<void> _editExercise(
       BuildContext context, DocumentSnapshot exercise) async {
-    final bool? confirmed = await showDialog<bool>(
+    // Burada egzersizi düzenleme mantığını ekleyebilirsiniz.
+  }
+
+  Future<void> _showDeleteConfirmation(
+      BuildContext context, DocumentSnapshot exercise) {
+    return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          content: Text(
-            'Bu egzersizi silmek istediğinize emin misiniz?',
-            style: TextStyle(color: Colors.white),
-          ),
-          actions: [
+          title: Text('Silme Onayı'),
+          content: Text('Bu egzersizi silmek istediğinize emin misiniz?'),
+          actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Hayır',
-                  style: TextStyle(fontSize: 16, color: Colors.blue)),
+              child: Text('Hayır'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Evet',
-                  style: TextStyle(fontSize: 16, color: Colors.red)),
+              child: Text('Evet'),
+              onPressed: () async {
+                await exercise.reference.delete();
+                Navigator.of(context).pop();
+              },
             ),
           ],
         );
       },
     );
-
-    if (confirmed == true) {
-      await AddExercise.deleteExercise(context, exercise);
-    }
   }
 
   void showAddExerciseDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[850],
-          title: Text('Egzersiz Ekle', style: TextStyle(color: Colors.white)),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                buildTextField('Hareket Adı', _hareketController),
-                buildTextField('Set', _setController),
-                buildTextField('Tekrar', _tekrarController),
-                buildTextField('Ağırlık', _agirlikController),
-              ],
-            ),
+          title: Text('Egzersiz Ekle'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _hareketController,
+                decoration: InputDecoration(labelText: 'Hareket Adı'),
+              ),
+              TextField(
+                controller: _setController,
+                decoration: InputDecoration(labelText: 'Set'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: _tekrarController,
+                decoration: InputDecoration(labelText: 'Tekrar'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: _agirlikController,
+                decoration: InputDecoration(labelText: 'Ağırlık'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
           ),
           actions: [
             TextButton(
+              child: Text('Ekle'),
               onPressed: () {
+                _addExercise();
                 Navigator.of(context).pop();
-                clearTextFields();
               },
-              child: Text('İptal', style: TextStyle(color: Colors.red)),
-            ),
-            TextButton(
-              onPressed: () async {
-                await AddExercise.addExercise(
-                  context,
-                  uid!,
-                  widget.programId,
-                  hareketAdi: _hareketController.text,
-                  set: _setController.text,
-                  tekrar: _tekrarController.text,
-                  agirlik: _agirlikController.text,
-                );
-                Navigator.of(context).pop();
-                clearTextFields();
-              },
-              child: Text('Ekle', style: TextStyle(color: Colors.green)),
             ),
           ],
         );
@@ -373,21 +392,25 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     );
   }
 
-  TextField buildTextField(String label, TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: Colors.white),
-      ),
-      keyboardType: TextInputType.number,
-    );
-  }
+  Future<void> _addExercise() async {
+    if (_hareketController.text.isNotEmpty &&
+        _setController.text.isNotEmpty &&
+        _tekrarController.text.isNotEmpty &&
+        _agirlikController.text.isNotEmpty) {
+      await FirebaseFirestore.instance
+          .collection('Users/$uid/Programs/${widget.programId}/Exercises')
+          .add({
+        'hareketAdi': _hareketController.text,
+        'set': int.parse(_setController.text),
+        'tekrar': int.parse(_tekrarController.text),
+        'agirlik': int.parse(_agirlikController.text),
+        'timestamp': FieldValue.serverTimestamp(), // Zaman damgası ekle
+      });
 
-  void clearTextFields() {
-    _hareketController.clear();
-    _setController.clear();
-    _tekrarController.clear();
-    _agirlikController.clear();
+      _hareketController.clear();
+      _setController.clear();
+      _tekrarController.clear();
+      _agirlikController.clear();
+    }
   }
 }

@@ -30,9 +30,6 @@ class _ActiveProgramState extends State<ActiveProgram> {
       return;
     }
 
-    String programAdi = programSnapshot['programAdi'];
-    String programIdFromSnapshot = programSnapshot.id; // Program ID'yi al
-
     QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection('Users/$uid/Programs/$programId/Exercises')
         .orderBy('timestamp')
@@ -144,89 +141,103 @@ class _ActiveProgramState extends State<ActiveProgram> {
                       '${currentIndex + 1}/${exercises.length}',
                       style: TextStyle(fontSize: 30, color: Colors.white),
                     ),
+                    SizedBox(height: 20),
                     Container(
-                      width: 250,
-                      child: Card(
+                      width: 300,
+                      decoration: BoxDecoration(
                         color: Colors.grey[850],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                exercises[currentIndex]['hareketAdi'],
-                                style: TextStyle(
-                                    fontSize: 24, color: Colors.white),
-                              ),
-                              SizedBox(height: 10),
-                              Text(
-                                'Set: ${exercises[currentIndex]['set']}',
-                                style: TextStyle(
-                                    fontSize: 20, color: Colors.white),
-                              ),
-                              Text(
-                                'Tekrar: ${exercises[currentIndex]['tekrar']}',
-                                style: TextStyle(
-                                    fontSize: 20, color: Colors.white),
-                              ),
-                              Text(
-                                'Ağırlık: ${exercises[currentIndex]['agirlik']}',
-                                style: TextStyle(
-                                    fontSize: 20, color: Colors.white),
-                              ),
-                            ],
+                        borderRadius: BorderRadius.circular(15.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black54,
+                            blurRadius: 10.0,
+                            offset: Offset(0, 5),
                           ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              exercises[currentIndex]['hareketAdi'],
+                              style:
+                                  TextStyle(fontSize: 24, color: Colors.white),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              'Set: ${exercises[currentIndex]['set']}',
+                              style:
+                                  TextStyle(fontSize: 20, color: Colors.white),
+                            ),
+                            Text(
+                              'Tekrar: ${exercises[currentIndex]['tekrar']}',
+                              style:
+                                  TextStyle(fontSize: 20, color: Colors.white),
+                            ),
+                            Text(
+                              'Ağırlık: ${exercises[currentIndex]['agirlik']}',
+                              style:
+                                  TextStyle(fontSize: 20, color: Colors.white),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    SizedBox(height: 100),
+                    SizedBox(height: 50),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          margin: EdgeInsets.all(8.0),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[850],
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                          child: TextButton(
-                            onPressed: currentIndex == 0
-                                ? null
-                                : () {
-                                    setState(() {
-                                      currentIndex--;
-                                    });
-                                  },
-                            child: Text(
-                              'Geri',
-                              style: TextStyle(
-                                color: currentIndex == 0
-                                    ? Colors.grey[600]
-                                    : Colors.white,
+                        Expanded(
+                          child: Container(
+                            margin: EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[850],
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            child: TextButton(
+                              onPressed: currentIndex == 0
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        currentIndex--;
+                                      });
+                                    },
+                              child: Text(
+                                'Geri',
+                                style: TextStyle(
+                                  color: currentIndex == 0
+                                      ? Colors.grey[600]
+                                      : Colors.white,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                        Container(
-                          margin: EdgeInsets.all(8.0),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[850],
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                          child: TextButton(
-                            onPressed: currentIndex == exercises.length - 1
-                                ? null
-                                : () {
-                                    setState(() {
-                                      currentIndex++;
-                                    });
-                                  },
-                            child: Text(
-                              'İleri',
-                              style: TextStyle(
-                                color: currentIndex == exercises.length - 1
-                                    ? Colors.grey[600]
-                                    : Colors.white,
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Container(
+                            margin: EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[850],
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            child: TextButton(
+                              onPressed: currentIndex == exercises.length - 1
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        currentIndex++;
+                                      });
+                                    },
+                              child: Text(
+                                'İleri',
+                                style: TextStyle(
+                                  color: currentIndex == exercises.length - 1
+                                      ? Colors.grey[600]
+                                      : Colors.white,
+                                ),
                               ),
                             ),
                           ),
@@ -243,11 +254,8 @@ class _ActiveProgramState extends State<ActiveProgram> {
                         child: TextButton(
                           onPressed: () {
                             String programId = widget.programId;
-
                             LastProgram lastProgramInstance = LastProgram();
-
                             lastProgramInstance.lastProgram(programId);
-
                             Navigator.pop(context);
                           },
                           child: Text(

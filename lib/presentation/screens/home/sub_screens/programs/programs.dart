@@ -31,14 +31,14 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(
                 child: Text('Program yok.',
-                    style: TextStyle(color: Colors.white))); // Metin rengi
+                    style: TextStyle(color: Colors.white)));
           }
 
           return ListView(
             children: snapshot.data!.docs.map((doc) {
               return Card(
                 margin: EdgeInsets.all(8.0),
-                color: Colors.grey[850], // Kart arka plan rengi
+                color: Colors.grey[850],
                 child: ListTile(
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -47,8 +47,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                         child: Text(
                           doc['programAdi'],
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontSize: 25, color: Colors.white), // Metin rengi
+                          style: TextStyle(fontSize: 25, color: Colors.white),
                         ),
                       ),
                       Row(
@@ -90,8 +89,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor:
-            Colors.blueAccent, // Floating action button arka plan rengi
+        backgroundColor: Colors.blueAccent,
         onPressed: () {
           _addProgram(context);
         },
@@ -108,19 +106,19 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[900], // Dialog arka plan rengi
-          title: Text('Yeni Program Ekle',
-              style: TextStyle(color: Colors.white)), // Metin rengi
+          backgroundColor: Colors.grey[900],
+          title:
+              Text('Yeni Program Ekle', style: TextStyle(color: Colors.white)),
           content: Form(
             key: _formKey,
             child: TextFormField(
               decoration: InputDecoration(
                   labelText: 'Program Adı',
-                  labelStyle: TextStyle(color: Colors.white)), // Label rengi
+                  labelStyle: TextStyle(color: Colors.white)),
               onChanged: (value) => programAdi = value,
               validator: (value) =>
                   value!.isEmpty ? 'Bu alan boş olamaz.' : null,
-              style: TextStyle(color: Colors.white), // Metin rengi
+              style: TextStyle(color: Colors.white),
             ),
           ),
           actions: [

@@ -63,7 +63,7 @@ class AddExercise {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Lütfen tüm alanları doldurun!'),
       ));
-      return false; // Başarısız olduğu için false döndürüyoruz
+      return false;
     }
 
     try {
@@ -74,13 +74,13 @@ class AddExercise {
         'agirlik': agirlik,
         'timestamp': FieldValue.serverTimestamp(),
       });
-      return true; // Başarılı olduğu için true döndürüyoruz
+      return true;
     } catch (e) {
       print("Egzersiz ekleme hatası: $e");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Egzersiz ekleme hatası!'),
       ));
-      return false; // Başarısız olduğu için false döndürüyoruz
+      return false;
     }
   }
 
@@ -131,6 +131,74 @@ class AddExercise {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Silme işlemi sırasında hata oluştu: $e'),
       ));
+    }
+  }
+}
+
+class AddWeight {
+  static Future<bool> addWeight(BuildContext context, double weight) async {
+    String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Lütfen giriş yapın.'),
+        backgroundColor: Colors.red,
+      ));
+      return false;
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('Users/$uid/Weight').add({
+        'weight': weight,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Kilo başarıyla eklendi!'),
+      ));
+
+      return true;
+    } catch (e) {
+      print('Kilo eklenirken hata: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Kilo ekleme hatası!'),
+      ));
+      return false;
+    }
+  }
+
+  static Future<bool> editWeight(
+      BuildContext context, String id, double weight) async {
+    String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Lütfen giriş yapın.'),
+        backgroundColor: Colors.red,
+      ));
+      return false; // Kullanıcı girişi yok
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('Users/$uid/Weight')
+          .doc(id)
+          .update({
+        'weight': weight,
+        'timestamp': FieldValue.serverTimestamp(), // Güncelleme zamanı
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Kilo başarıyla güncellendi!'),
+      ));
+
+      return true;
+    } catch (e) {
+      print('Kilo güncellenirken hata: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Kilo güncelleme hatası!'),
+      ));
+      return false;
     }
   }
 }
