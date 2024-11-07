@@ -254,7 +254,6 @@ class _HomeState extends State<Home> {
         };
       }).toList();
 
-      // Programları yükledikten sonra bir sonraki programı kontrol et.
       await _fetchNextProgram(uid);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(

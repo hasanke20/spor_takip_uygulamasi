@@ -252,8 +252,9 @@ class _ActiveProgramState extends State<ActiveProgram> {
                           borderRadius: BorderRadius.circular(12.0),
                         ),
                         child: TextButton(
-                          onPressed: () {
+                          onPressed: () async {
                             String programId = widget.programId;
+                            await incrementCompletedCycle(programId);
                             LastProgram lastProgramInstance = LastProgram();
                             lastProgramInstance.lastProgram(programId);
                             Navigator.pop(context);
@@ -269,5 +270,35 @@ class _ActiveProgramState extends State<ActiveProgram> {
               ),
       ),
     );
+  }
+}
+
+Future<void> incrementCompletedCycle(String programId) async {
+  String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+  if (uid == null) {
+    print("Kullanıcı kimliği bulunamadı.");
+    return;
+  }
+
+  try {
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance
+        .collection('Users/$uid/Programs/$programId/Dongu')
+        .doc('completedCycle')
+        .get();
+
+    int currentCycle =
+        (snapshot.data() as Map<String, dynamic>?)?['cycle'] ?? 0;
+
+    await FirebaseFirestore.instance
+        .collection('Users/$uid/Programs/$programId/Dongu')
+        .doc('completedCycle')
+        .set({
+      'cycle': currentCycle + 1,
+    });
+
+    print("completedCycle değeri başarıyla artırıldı.");
+  } catch (error) {
+    print("completedCycle değeri artırılamadı: $error");
   }
 }

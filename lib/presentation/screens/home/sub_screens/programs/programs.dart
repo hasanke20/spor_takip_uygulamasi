@@ -212,7 +212,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                 'Hayır',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.blue, // Metin rengi
+                  color: Colors.white, // Metin rengi
                 ),
               ),
             ),

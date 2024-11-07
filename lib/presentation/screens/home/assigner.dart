@@ -64,29 +64,41 @@ class _AssignerState extends State<Assigner> {
           builder: (context) => AlertDialog(
             title: Text(
               "Çıkış Yap",
-              style: TextStyle(color: Colors.white), // Beyaz başlık
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20, // Başlık için font boyutunu artırdık
+              ),
             ),
             content: Text(
               "Çıkış yapmak istediğinize emin misiniz?",
-              style: TextStyle(color: Colors.white), // Beyaz içerik
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16, // İçerik için font boyutunu artırdık
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
                 child: Text(
                   "Hayır",
-                  style: TextStyle(color: Colors.blue), // Mavi "Hayır" butonu
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontSize: 16,
+                  ),
                 ),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 child: Text(
                   "Evet",
-                  style: TextStyle(color: Colors.blue), // Mavi "Evet" butonu
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ],
-            backgroundColor: Colors.black, // Koyu arka plan
+            backgroundColor: Colors.black,
           ),
         )) ??
         false;

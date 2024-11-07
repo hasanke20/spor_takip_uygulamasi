@@ -59,10 +59,7 @@ class _AllWeightsState extends State<AllWeights> {
           .get();
 
       for (var doc in snapshot.docs) {
-        await FirebaseFirestore.instance
-            .collection('Users/$uid/Weight')
-            .doc(doc.id)
-            .delete();
+        await doc.reference.delete(); // Belgeyi sil
       }
 
       _fetchAllWeights(); // Listeyi güncelle
@@ -90,10 +87,10 @@ class _AllWeightsState extends State<AllWeights> {
                 borderRadius: BorderRadius.circular(20.0),
                 color: Colors.red,
               ),
-              child: IconButton(
-                icon: const Text('Hepsini Sil',
-                    style: TextStyle(color: Colors.white)),
+              child: TextButton(
                 onPressed: _showDeleteConfirmationDialog,
+                child: const Text('Hepsini Sil',
+                    style: TextStyle(color: Colors.white)),
               ),
             ),
           ],
@@ -129,10 +126,13 @@ class _AllWeightsState extends State<AllWeights> {
 
   Widget _buildWeightCard(WeightData weightData, double previousChange,
       double totalChange, int index) {
+    bool isFirstItem = index == 0;
+    Color cardColor = isFirstItem ? Colors.grey.shade700 : Colors.grey.shade900;
+
     return Container(
       margin: const EdgeInsets.all(8.0),
       decoration: BoxDecoration(
-        color: Colors.grey.shade900,
+        color: cardColor,
         borderRadius: BorderRadius.circular(20.0),
         boxShadow: [
           BoxShadow(
@@ -144,7 +144,7 @@ class _AllWeightsState extends State<AllWeights> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0), // Daha fazla iç boşluk
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -283,17 +283,15 @@ class _AllWeightsState extends State<AllWeights> {
             ),
             TextButton(
               onPressed: () async {
-                double newWeight = double.tryParse(weightController.text) ?? 0;
-
-                if (newWeight > 0) {
-                  await AddWeight.editWeight(context, weightData.id,
-                      newWeight); // Veritabanını güncelle
-                  _fetchAllWeights(); // Listeyi güncelle
+                double? newWeight = double.tryParse(weightController.text);
+                if (newWeight != null) {
+                  await AddWeight.editWeight(context, weightData.id, newWeight);
+                  _fetchAllWeights(); // Verileri yeniden yükle
+                  Navigator.of(context).pop(); // Dialogu kapat
                 }
-                Navigator.of(context).pop(); // Dialogu kapat
               },
               child:
-                  const Text('Kaydet', style: TextStyle(color: Colors.green)),
+                  const Text('Güncelle', style: TextStyle(color: Colors.green)),
             ),
           ],
         );
@@ -310,10 +308,11 @@ class _AllWeightsState extends State<AllWeights> {
       await FirebaseFirestore.instance
           .collection('Users/$uid/Weight')
           .doc(id)
-          .delete(); // Belirli veriyi sil
-      _fetchAllWeights(); // Listeyi güncelle
+          .delete();
+
+      _fetchAllWeights();
     } catch (e) {
-      print("Veri silerken hata: $e");
+      print("Ölçüm silinirken hata: $e");
     }
   }
 
@@ -338,23 +337,20 @@ class _AllWeightsState extends State<AllWeights> {
           ),
           actions: [
             TextButton(
-              onPressed: () =>
-                  Navigator.of(context).pop(), // İptal için dialogu kapat
-              child: const Text('İptal',
-                  style: TextStyle(color: Colors.blueAccent)),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('İptal', style: TextStyle(color: Colors.white)),
             ),
             TextButton(
               onPressed: () async {
-                double weight = double.tryParse(weightController.text) ?? 0;
-
-                if (weight > 0) {
-                  await AddWeight.addWeight(
-                      context, weight); // Veritabanına ekle
-                  _fetchAllWeights(); // Listeyi güncelle
+                double? weight = double.tryParse(weightController.text);
+                if (weight != null) {
+                  await AddWeight.addWeight(context, weight);
+                  _fetchAllWeights();
+                  Navigator.of(context).pop();
                 }
-                Navigator.of(context).pop(); // Dialogu kapat
               },
-              child: const Text('Ekle', style: TextStyle(color: Colors.green)),
+              child: const Text('Ekle',
+                  style: TextStyle(color: Colors.blueAccent)),
             ),
           ],
         );
@@ -366,7 +362,7 @@ class _AllWeightsState extends State<AllWeights> {
 class WeightData {
   final double weight;
   final DateTime timestamp;
-  final String id; // Belge ID'si
+  final String id; // Belge ID'sini ekleyin
 
   WeightData(this.weight, this.timestamp, this.id);
 }

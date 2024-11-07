@@ -18,27 +18,49 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
   final TextEditingController _setController = TextEditingController();
   final TextEditingController _tekrarController = TextEditingController();
   final TextEditingController _agirlikController = TextEditingController();
-  final TextEditingController _donguController = TextEditingController();
 
   String? uid;
   int completedCycles = 0;
+  int cycle = 20;
+  bool isDataLoaded = false;
 
   @override
   void initState() {
     super.initState();
     uid = FirebaseAuth.instance.currentUser?.uid;
-    _fetchCompletedCycles(); // Tamamlanan döngü verisini çek
+    _fetchCycles();
   }
 
-  Future<void> _fetchCompletedCycles() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('Users/$uid/Programs/${widget.programId}/Dongu')
-        .get();
+  Future<void> _fetchCycles() async {
+    try {
+      final completedCycleSnapshot = await FirebaseFirestore.instance
+          .collection('Users/$uid/Programs/${widget.programId}/Dongu')
+          .doc('completedCycle')
+          .get();
 
-    if (snapshot.docs.isNotEmpty) {
+      if (completedCycleSnapshot.exists &&
+          completedCycleSnapshot.data() != null) {
+        completedCycles = completedCycleSnapshot.data()!['cycle'] ?? 0;
+      } else {
+        print('Completed cycle document does not exist or has no data.');
+      }
+
+      final targetCycleSnapshot = await FirebaseFirestore.instance
+          .collection('Users/$uid/Programs/${widget.programId}/Dongu')
+          .doc('cycle')
+          .get();
+
+      if (targetCycleSnapshot.exists && targetCycleSnapshot.data() != null) {
+        cycle = targetCycleSnapshot.data()!['cycle'];
+      } else {
+        print('Target cycle document does not exist or has no data.');
+        cycle = 20;
+      }
+    } catch (e) {
+      print('Error fetching cycles: $e');
+    } finally {
       setState(() {
-        completedCycles =
-            snapshot.docs.length; // Tamamlanan döngü sayısını güncelle
+        isDataLoaded = true; // Veri yüklendikten sonra true yap
       });
     }
   }
@@ -49,7 +71,6 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     _setController.dispose();
     _tekrarController.dispose();
     _agirlikController.dispose();
-    _donguController.dispose();
     super.dispose();
   }
 
@@ -73,90 +94,63 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               icon: Icon(Icons.arrow_back, color: Colors.white),
             ),
           ),
-          body: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
+          body: isDataLoaded
+              ? Column(
                   children: [
-                    Container(
-                      padding: EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[800],
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Text(
-                        'Tamamlanan Döngü: $completedCycles',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    Spacer(),
-                    Container(
-                      width: 80,
-                      child: TextField(
-                        controller: _donguController,
-                        style: TextStyle(color: Colors.white),
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Döngü',
-                          labelStyle: TextStyle(color: Colors.white),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.grey),
-                          ),
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          buildCycleField(context, completedCycles,
+                              'Tamamlanan', Colors.white),
+                          buildCycleField(
+                              context, cycle, 'Hedef', Colors.white),
+                        ],
                       ),
                     ),
-                    Spacer(),
-                    ElevatedButton(
-                      onPressed: _updateCycles,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                      ),
-                      child: Text(
-                        'Kaydet',
-                        style: TextStyle(color: Colors.white),
+                    Expanded(
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection(
+                                'Users/$uid/Programs/${widget.programId}/Exercises')
+                            .orderBy('timestamp', descending: false)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text('Bir hata oluştu!',
+                                  style: TextStyle(color: Colors.white)),
+                            );
+                          }
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Center(child: CircularProgressIndicator());
+                          }
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
+                            return Center(
+                                child: Text('Egzersiz yok.',
+                                    style: TextStyle(color: Colors.white)));
+                          }
+
+                          final exerciseData = snapshot.data!.docs;
+
+                          return ListView.builder(
+                            itemCount: exerciseData.length,
+                            itemBuilder: (context, index) {
+                              var exercise = exerciseData[index];
+                              return buildExerciseCard(context, exercise);
+                            },
+                          );
+                        },
                       ),
                     ),
                   ],
-                ),
-              ),
-              Expanded(
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection(
-                          'Users/$uid/Programs/${widget.programId}/Exercises')
-                      .orderBy('timestamp', descending: false)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Text('Bir hata oluştu!',
-                            style: TextStyle(color: Colors.white)),
-                      );
-                    }
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    }
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return Center(
-                          child: Text('Egzersiz yok.',
-                              style: TextStyle(color: Colors.white)));
-                    }
-
-                    final exerciseData = snapshot.data!.docs;
-
-                    return ListView.builder(
-                      itemCount: exerciseData.length,
-                      itemBuilder: (context, index) {
-                        var exercise = exerciseData[index];
-                        return buildExerciseCard(context, exercise);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+                )
+              : Center(
+                  child:
+                      CircularProgressIndicator()), // Veri yükleniyorsa yükleme simgesi göster
           floatingActionButton: FloatingActionButton(
             onPressed: showAddExerciseDialog,
             child: Icon(Icons.add, color: Colors.black),
@@ -167,8 +161,12 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             child: Container(
               height: 50,
               child: ElevatedButton(
-                onPressed: () {
-                  Get.to(ActiveProgram(programId: widget.programId));
+                onPressed: () async {
+                  await Get.to(
+                      () => ActiveProgram(programId: widget.programId));
+                  print("merhabaaaa");
+                  setState(() {});
+                  await _fetchCycles();
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
                 child: Text('Programı Başlat',
@@ -203,18 +201,15 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             Container(
               decoration: BoxDecoration(
                 color: Colors.grey.shade700,
-                borderRadius:
-                    BorderRadius.all(Radius.circular(20)), // Köşe yuvarlama
+                borderRadius: BorderRadius.all(Radius.circular(20)),
               ),
               width: 50,
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4),
                 child: TextField(
                   controller: kiloGirisController,
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20), // Yazı boyutunu ayarlayın
-                  textAlign: TextAlign.center, // Ortaya hizalama
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                  textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     hintText: 'Kilo',
@@ -228,6 +223,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       int updatedWeight = existingWeight + additionalWeight;
                       await exercise.reference
                           .update({'agirlik': updatedWeight});
+                      // Kilo güncellemelerinin ekranda gösterilmesi
+                      setState(() {}); // Ekranı güncelle
                     }
                   },
                 ),
@@ -241,7 +238,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               },
             ),
             IconButton(
-              icon: Icon(Icons.delete, color: Colors.red),
+              icon: Icon(Icons.delete, color: Colors.white),
               onPressed: () => _showDeleteConfirmation(context, exercise),
             ),
           ],
@@ -269,6 +266,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
   Widget buildEditableField(BuildContext context, DocumentSnapshot exercise,
       String exerciseId, String field, Color color) {
+    final controller = TextEditingController(text: exercise[field].toString());
+
     return Flexible(
       flex: 2,
       child: Container(
@@ -280,7 +279,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
           padding: EdgeInsets.symmetric(horizontal: 4),
           child: TextField(
             textAlign: TextAlign.center,
-            controller: TextEditingController(text: exercise[field].toString()),
+            controller: controller,
             keyboardType: TextInputType.number,
             style: TextStyle(fontSize: 30, color: color),
             decoration: InputDecoration(border: InputBorder.none),
@@ -295,52 +294,108 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     );
   }
 
-  Future<void> _updateCycles() async {
-    if (_donguController.text.isNotEmpty) {
-      int newCycles = int.parse(_donguController.text);
-      setState(() {
-        completedCycles += newCycles; // Güncellenen döngü sayısını artır
-      });
-
-      // Tamamlanan döngüleri Firestore'a ekle
-      for (int i = 0; i < newCycles; i++) {
-        await FirebaseFirestore.instance
-            .collection('Users/$uid/Programs/${widget.programId}/Dongu')
-            .add({
-          'completedAt': FieldValue.serverTimestamp(), // Tamamlanma zamanı
-        });
-      }
-
-      _donguController.clear(); // TextField'i temizle
-    }
+  Widget buildCycleField(
+      BuildContext context, int value, String label, Color color) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(color: color),
+        ),
+        Text(
+          value.toString(),
+          style: TextStyle(
+              fontSize: 30, fontWeight: FontWeight.bold, color: color),
+        ),
+      ],
+    );
   }
 
-  Future<void> _editExercise(
-      BuildContext context, DocumentSnapshot exercise) async {
-    // Burada egzersizi düzenleme mantığını ekleyebilirsiniz.
-  }
-
-  Future<void> _showDeleteConfirmation(
+  void _showDeleteConfirmation(
       BuildContext context, DocumentSnapshot exercise) {
-    return showDialog<void>(
+    showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Silme Onayı'),
-          content: Text('Bu egzersizi silmek istediğinize emin misiniz?'),
-          actions: <Widget>[
+          title: Text('Silmek istediğinize emin misiniz?'),
+          content: Text('Bu egzersizi silmek için onaylayın.'),
+          actions: [
             TextButton(
-              child: Text('Hayır'),
+              child: Text('İptal'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Evet'),
+              child: Text('Sil'),
               onPressed: () async {
                 await exercise.reference.delete();
                 Navigator.of(context).pop();
               },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _editExercise(BuildContext context, DocumentSnapshot exercise) {
+    final TextEditingController hareketController =
+        TextEditingController(text: exercise['hareketAdi']);
+    final TextEditingController setController =
+        TextEditingController(text: exercise['set'].toString());
+    final TextEditingController tekrarController =
+        TextEditingController(text: exercise['tekrar'].toString());
+    final TextEditingController agirlikController =
+        TextEditingController(text: exercise['agirlik'].toString());
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Egzersizi Düzenle'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: hareketController,
+                decoration: InputDecoration(labelText: 'Hareket Adı'),
+              ),
+              TextField(
+                controller: setController,
+                decoration: InputDecoration(labelText: 'Set'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: tekrarController,
+                decoration: InputDecoration(labelText: 'Tekrar'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: agirlikController,
+                decoration: InputDecoration(labelText: 'Ağırlık'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('İptal'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await exercise.reference.update({
+                  'hareketAdi': hareketController.text,
+                  'set': int.parse(setController.text),
+                  'tekrar': int.parse(tekrarController.text),
+                  'agirlik': int.parse(agirlikController.text),
+                });
+                Navigator.of(context).pop();
+              },
+              child: Text('Kaydet'),
             ),
           ],
         );
@@ -380,37 +435,39 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
           ),
           actions: [
             TextButton(
-              child: Text('Ekle'),
               onPressed: () {
-                _addExercise();
                 Navigator.of(context).pop();
               },
+              child: Text('İptal'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (_hareketController.text.isNotEmpty &&
+                    _setController.text.isNotEmpty &&
+                    _tekrarController.text.isNotEmpty &&
+                    _agirlikController.text.isNotEmpty) {
+                  await FirebaseFirestore.instance
+                      .collection(
+                          'Users/$uid/Programs/${widget.programId}/Exercises')
+                      .add({
+                    'hareketAdi': _hareketController.text,
+                    'set': int.parse(_setController.text),
+                    'tekrar': int.parse(_tekrarController.text),
+                    'agirlik': int.parse(_agirlikController.text),
+                    'timestamp': FieldValue.serverTimestamp(),
+                  });
+                  _hareketController.clear();
+                  _setController.clear();
+                  _tekrarController.clear();
+                  _agirlikController.clear();
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text('Ekle'),
             ),
           ],
         );
       },
     );
-  }
-
-  Future<void> _addExercise() async {
-    if (_hareketController.text.isNotEmpty &&
-        _setController.text.isNotEmpty &&
-        _tekrarController.text.isNotEmpty &&
-        _agirlikController.text.isNotEmpty) {
-      await FirebaseFirestore.instance
-          .collection('Users/$uid/Programs/${widget.programId}/Exercises')
-          .add({
-        'hareketAdi': _hareketController.text,
-        'set': int.parse(_setController.text),
-        'tekrar': int.parse(_tekrarController.text),
-        'agirlik': int.parse(_agirlikController.text),
-        'timestamp': FieldValue.serverTimestamp(), // Zaman damgası ekle
-      });
-
-      _hareketController.clear();
-      _setController.clear();
-      _tekrarController.clear();
-      _agirlikController.clear();
-    }
   }
 }
