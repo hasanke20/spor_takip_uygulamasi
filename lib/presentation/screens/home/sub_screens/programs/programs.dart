@@ -53,15 +53,13 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                       Row(
                         children: [
                           IconButton(
-                            icon: Icon(Icons.edit,
-                                color: Colors.white), // İkon rengi
+                            icon: Icon(Icons.edit, color: Colors.white),
                             onPressed: () {
                               _editProgram(context, doc);
                             },
                           ),
                           IconButton(
-                            icon: Icon(Icons.delete,
-                                color: Colors.white), // İkon rengi
+                            icon: Icon(Icons.delete, color: Colors.white),
                             onPressed: () async {
                               _confirmDelete(context, doc.id);
                             },
@@ -101,6 +99,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
   void _addProgram(BuildContext context) {
     final _formKey = GlobalKey<FormState>();
     String programAdi = '';
+    int targetCycle = 3;
 
     showDialog(
       context: context,
@@ -111,21 +110,36 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
               Text('Yeni Program Ekle', style: TextStyle(color: Colors.white)),
           content: Form(
             key: _formKey,
-            child: TextFormField(
-              decoration: InputDecoration(
-                  labelText: 'Program Adı',
-                  labelStyle: TextStyle(color: Colors.white)),
-              onChanged: (value) => programAdi = value,
-              validator: (value) =>
-                  value!.isEmpty ? 'Bu alan boş olamaz.' : null,
-              style: TextStyle(color: Colors.white),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  decoration: InputDecoration(
+                      labelText: 'Program Adı',
+                      labelStyle: TextStyle(color: Colors.white)),
+                  onChanged: (value) => programAdi = value,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Bu alan boş olamaz.' : null,
+                  style: TextStyle(color: Colors.white),
+                ),
+                TextFormField(
+                  decoration: InputDecoration(
+                      labelText: 'Döngü',
+                      labelStyle: TextStyle(color: Colors.white)),
+                  onChanged: (value) => targetCycle,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Bu alan boş olamaz.' : null,
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
             ),
           ),
           actions: [
             TextButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
-                  AddProgram.addProgram(context, programAdi: programAdi);
+                  AddProgram.addProgram(context,
+                      programAdi: programAdi, targetCycle: targetCycle);
                   Navigator.of(context).pop();
                 }
               },
@@ -146,20 +160,20 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[900], // Dialog arka plan rengi
-          title: Text('Programı Düzenle',
-              style: TextStyle(color: Colors.white)), // Metin rengi
+          backgroundColor: Colors.grey[900],
+          title:
+              Text('Programı Düzenle', style: TextStyle(color: Colors.white)),
           content: Form(
             key: _formKey,
             child: TextFormField(
               decoration: InputDecoration(
                   labelText: 'Program Adı',
-                  labelStyle: TextStyle(color: Colors.white)), // Label rengi
+                  labelStyle: TextStyle(color: Colors.white)),
               initialValue: programAdi,
               onChanged: (value) => programAdi = value,
               validator: (value) =>
                   value!.isEmpty ? 'Bu alan boş olamaz.' : null,
-              style: TextStyle(color: Colors.white), // Metin rengi
+              style: TextStyle(color: Colors.white),
             ),
           ),
           actions: [
@@ -173,21 +187,20 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                       .update({'programAdi': programAdi}).then((_) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text('Program başarıyla güncellendi!',
-                          style: TextStyle(color: Colors.white)), // Metin rengi
-                      backgroundColor: Colors.green, // SnackBar arka plan rengi
+                          style: TextStyle(color: Colors.white)),
+                      backgroundColor: Colors.green,
                     ));
                     Navigator.of(context).pop();
                   }).catchError((error) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text('Güncelleme hatası: $error',
-                          style: TextStyle(color: Colors.white)), // Metin rengi
-                      backgroundColor: Colors.red, // SnackBar arka plan rengi
+                          style: TextStyle(color: Colors.white)),
+                      backgroundColor: Colors.red,
                     ));
                   });
                 }
               },
-              child: Text('Güncelle',
-                  style: TextStyle(color: Colors.blue)), // Metin rengi
+              child: Text('Güncelle', style: TextStyle(color: Colors.blue)),
             ),
           ],
         );
@@ -246,15 +259,15 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
       print('Program başarıyla silindi.');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Program başarıyla silindi.',
-            style: TextStyle(color: Colors.white)), // Metin rengi
-        backgroundColor: Colors.green, // SnackBar arka plan rengi
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.green,
       ));
     } catch (e) {
       print('Silme hatası: $e');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Silme hatası: $e',
-            style: TextStyle(color: Colors.white)), // Metin rengi
-        backgroundColor: Colors.red, // SnackBar arka plan rengi
+        content:
+            Text('Silme hatası: $e', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.red,
       ));
     }
   }

@@ -282,20 +282,7 @@ Future<void> incrementCompletedCycle(String programId) async {
   }
 
   try {
-    DocumentSnapshot snapshot = await FirebaseFirestore.instance
-        .collection('Users/$uid/Programs/$programId/Dongu')
-        .doc('completedCycle')
-        .get();
-
-    int currentCycle =
-        (snapshot.data() as Map<String, dynamic>?)?['cycle'] ?? 0;
-
-    await FirebaseFirestore.instance
-        .collection('Users/$uid/Programs/$programId/Dongu')
-        .doc('completedCycle')
-        .set({
-      'cycle': currentCycle + 1,
-    });
+    incrementCompletedCycles(programId);
 
     print("completedCycle değeri başarıyla artırıldı.");
   } catch (error) {

@@ -36,7 +36,13 @@ class _AssignerState extends State<Assigner> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: _showExitConfirmationDialog,
+      onWillPop: () async {
+        bool shouldExit = await _showExitConfirmationDialog();
+        if (shouldExit) {
+          Navigator.of(context).pop(); // Sayfayı kapatır
+        }
+        return Future.value(false);
+      },
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -66,14 +72,14 @@ class _AssignerState extends State<Assigner> {
               "Çıkış Yap",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 20, // Başlık için font boyutunu artırdık
+                fontSize: 20,
               ),
             ),
             content: Text(
               "Çıkış yapmak istediğinize emin misiniz?",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 16, // İçerik için font boyutunu artırdık
+                fontSize: 16,
               ),
             ),
             actions: [

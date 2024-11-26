@@ -11,9 +11,9 @@ class AddProgram {
   static Future<void> addProgram(
     BuildContext context, {
     required String programAdi,
+    required int targetCycle,
   }) async {
     String? uid = FirebaseAuth.instance.currentUser?.uid;
-
     if (uid == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Kullanıcı kimliği alınamadı!'),
@@ -27,7 +27,6 @@ class AddProgram {
       ));
       return;
     }
-
     CollectionReference ref = programRef(uid);
     try {
       DocumentReference docRef = await ref.add({
@@ -346,5 +345,68 @@ class LoginUser {
 
       throw Exception(errorMessage);
     }
+  }
+}
+
+Future<void> incrementCompletedCycles(String programId) async {
+  String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+  if (uid == null) {
+    print("Kullanıcı kimliği bulunamadı.");
+    return;
+  }
+
+  try {
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance
+        .collection('Users/$uid/Programs/$programId/Dongu')
+        .doc('cycle')
+        .get();
+
+    int completedCycle =
+        (snapshot.data() as Map<String, dynamic>?)?['completedCycle'] ?? 0;
+
+    int targetCycle =
+        (snapshot.data() as Map<String, dynamic>?)?['targetCycle'] ?? 0;
+
+    double donguKilo =
+        (snapshot.data() as Map<String, dynamic>?)?['donguKilo'] ?? 0.0;
+
+    completedCycle++;
+    if (completedCycle >= targetCycle) {
+      print('$completedCycle');
+      completedCycle = 0;
+      print('$completedCycle');
+
+      QuerySnapshot exercisesSnapshot = await FirebaseFirestore.instance
+          .collection('Users/$uid/Programs/$programId/Exercises')
+          .get();
+      print('Ref alindi');
+
+      for (var exercise in exercisesSnapshot.docs) {
+        double currentWeight =
+            (exercise.data() as Map<String, dynamic>)['agirlik'].toDouble() ??
+                0.0;
+        print('currentWeight alindi');
+
+        await FirebaseFirestore.instance
+            .collection('Users/$uid/Programs/$programId/Exercises')
+            .doc(exercise.id)
+            .update({'agirlik': (currentWeight + donguKilo).toDouble()});
+        print('Kilolar toplandi');
+      }
+    }
+
+    await FirebaseFirestore.instance
+        .collection('Users/$uid/Programs/$programId/Dongu')
+        .doc('cycle')
+        .set({
+      'targetCycle': targetCycle,
+      'completedCycle': completedCycle,
+      'donguKilo': donguKilo,
+    });
+
+    print("completedCycle değeri başarıyla artırıldı.");
+  } catch (error) {
+    print("completedCycle değeri artırıl: $error");
   }
 }

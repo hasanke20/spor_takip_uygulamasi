@@ -18,10 +18,11 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
   final TextEditingController _setController = TextEditingController();
   final TextEditingController _tekrarController = TextEditingController();
   final TextEditingController _agirlikController = TextEditingController();
+  final TextEditingController _donguController = TextEditingController();
 
   String? uid;
-  int completedCycles = 0;
-  int cycle = 20;
+  int _completedCycle = 0;
+  int _targetCycle = 3;
   bool isDataLoaded = false;
 
   @override
@@ -33,34 +34,40 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
   Future<void> _fetchCycles() async {
     try {
-      final completedCycleSnapshot = await FirebaseFirestore.instance
+      /*final docRef = FirebaseFirestore.instance
           .collection('Users/$uid/Programs/${widget.programId}/Dongu')
-          .doc('completedCycle')
-          .get();
+          .doc('cycle');
 
-      if (completedCycleSnapshot.exists &&
-          completedCycleSnapshot.data() != null) {
-        completedCycles = completedCycleSnapshot.data()!['cycle'] ?? 0;
+      final docSnapshot = await docRef.get();
+
+      if (!docSnapshot.exists) {
+        await docRef.set({
+          'completedCycle': _completedCycle,
+          'targetCycle': _targetCycle,
+        });
       } else {
-        print('Completed cycle document does not exist or has no data.');
-      }
+        _completedCycle =
+            docSnapshot.data()?['completedCycle'] ?? _completedCycle;
+        _targetCycle = docSnapshot.data()?['targetCycle'] ?? _targetCycle;
+      }*/
 
-      final targetCycleSnapshot = await FirebaseFirestore.instance
+      final completedCycleSnapshot = await FirebaseFirestore.instance
           .collection('Users/$uid/Programs/${widget.programId}/Dongu')
           .doc('cycle')
           .get();
 
-      if (targetCycleSnapshot.exists && targetCycleSnapshot.data() != null) {
-        cycle = targetCycleSnapshot.data()!['cycle'];
+      if (completedCycleSnapshot.exists &&
+          completedCycleSnapshot.data() != null) {
+        _completedCycle = completedCycleSnapshot.data()!['completedCycle'] ?? 0;
+        _targetCycle = completedCycleSnapshot.data()!['targetCycle'] ?? 3;
       } else {
-        print('Target cycle document does not exist or has no data.');
-        cycle = 20;
+        print('Completed cycle document does not exist or has no data.');
       }
     } catch (e) {
       print('Error fetching cycles: $e');
     } finally {
       setState(() {
-        isDataLoaded = true; // Veri yüklendikten sonra true yap
+        isDataLoaded = true;
       });
     }
   }
@@ -71,6 +78,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     _setController.dispose();
     _tekrarController.dispose();
     _agirlikController.dispose();
+    _donguController.dispose();
+
     super.dispose();
   }
 
@@ -102,10 +111,33 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          buildCycleField(context, completedCycles,
+                          buildCycleField(context, _completedCycle,
                               'Tamamlanan', Colors.white),
-                          buildCycleField(
-                              context, cycle, 'Hedef', Colors.white),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit, color: Colors.white),
+                                onPressed: () async {
+                                  String? newTargetCycle =
+                                      await _showEditTargetCycleDialog();
+                                  if (newTargetCycle != null &&
+                                      newTargetCycle.isNotEmpty) {
+                                    await FirebaseFirestore.instance
+                                        .collection(
+                                            'Users/$uid/Programs/${widget.programId}/Dongu')
+                                        .doc('cycle')
+                                        .update({
+                                      'targetCycle': int.parse(newTargetCycle),
+                                    });
+                                    // Fetch the updated cycles
+                                    await _fetchCycles();
+                                  }
+                                },
+                              ),
+                              buildCycleField(
+                                  context, _targetCycle, 'Hedef', Colors.white),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -148,9 +180,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     ),
                   ],
                 )
-              : Center(
-                  child:
-                      CircularProgressIndicator()), // Veri yükleniyorsa yükleme simgesi göster
+              : Center(child: CircularProgressIndicator()),
           floatingActionButton: FloatingActionButton(
             onPressed: showAddExerciseDialog,
             child: Icon(Icons.add, color: Colors.black),
@@ -179,8 +209,43 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     );
   }
 
+  Future<String?> _showEditTargetCycleDialog() async {
+    TextEditingController targetCycleController =
+        TextEditingController(text: _targetCycle.toString());
+
+    return await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Hedef Döngü Düzenle'),
+          content: TextField(
+            controller: targetCycleController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(labelText: 'Yeni Hedef Döngü'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(null);
+              },
+              child: Text('İptal'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(targetCycleController.text);
+              },
+              child: Text('Kaydet'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget buildExerciseCard(BuildContext context, DocumentSnapshot exercise) {
-    final TextEditingController kiloGirisController = TextEditingController();
+    final TextEditingController _donguKiloController = TextEditingController();
+
+    final donguKilo = exercise['donguKilo'] ?? 0;
 
     return Card(
       margin: EdgeInsets.all(10),
@@ -196,38 +261,6 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade700,
-                borderRadius: BorderRadius.all(Radius.circular(20)),
-              ),
-              width: 50,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4),
-                child: TextField(
-                  controller: kiloGirisController,
-                  style: TextStyle(color: Colors.white, fontSize: 20),
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    hintText: 'Kilo',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: InputBorder.none,
-                  ),
-                  onSubmitted: (value) async {
-                    if (value.isNotEmpty) {
-                      int additionalWeight = int.parse(value);
-                      int existingWeight = int.parse(exercise['agirlik']);
-                      int updatedWeight = existingWeight + additionalWeight;
-                      await exercise.reference
-                          .update({'agirlik': updatedWeight});
-                      // Kilo güncellemelerinin ekranda gösterilmesi
-                      setState(() {}); // Ekranı güncelle
-                    }
-                  },
-                ),
               ),
             ),
             SizedBox(width: 10),
@@ -258,6 +291,47 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 context, exercise, exercise.id, 'agirlik', Colors.white),
             SizedBox(width: 10),
             Text('kg', style: TextStyle(color: Colors.white, fontSize: 30)),
+            SizedBox(width: 10),
+            Row(
+              children: [
+                Icon(
+                  Icons.loop,
+                  color: Colors.grey,
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade700,
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                  ),
+                  width: 50,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: TextField(
+                      controller: _donguKiloController,
+                      style: TextStyle(color: Colors.white, fontSize: 30),
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        hintText: donguKilo.toString(),
+                        hintStyle: TextStyle(color: Colors.grey, fontSize: 30),
+                        border: InputBorder.none,
+                      ),
+                      onSubmitted: (value) async {
+                        if (value.isNotEmpty) {
+                          // Yeni donguKilo değerini kaydetme
+                          await exercise.reference.update({
+                            'donguKilo': int.parse(_donguKiloController.text),
+                          });
+
+                          // Ekranı güncelleme
+                          setState(() {});
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -285,7 +359,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             decoration: InputDecoration(border: InputBorder.none),
             onSubmitted: (updatedValue) async {
               if (updatedValue.isNotEmpty) {
-                await exercise.reference.update({field: updatedValue});
+                await exercise.reference.update({'target': updatedValue});
               }
             },
           ),
@@ -348,6 +422,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
         TextEditingController(text: exercise['tekrar'].toString());
     final TextEditingController agirlikController =
         TextEditingController(text: exercise['agirlik'].toString());
+    final TextEditingController donguKiloController =
+        TextEditingController(text: exercise['donguKilo'].toString());
 
     showDialog(
       context: context,
@@ -376,6 +452,11 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 decoration: InputDecoration(labelText: 'Ağırlık'),
                 keyboardType: TextInputType.number,
               ),
+              TextField(
+                controller: donguKiloController,
+                decoration: InputDecoration(labelText: 'Döngü Kilo'),
+                keyboardType: TextInputType.number,
+              ),
             ],
           ),
           actions: [
@@ -392,6 +473,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                   'set': int.parse(setController.text),
                   'tekrar': int.parse(tekrarController.text),
                   'agirlik': int.parse(agirlikController.text),
+                  'donguKilo': int.parse(donguKiloController.text),
                 });
                 Navigator.of(context).pop();
               },
@@ -431,6 +513,11 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 decoration: InputDecoration(labelText: 'Ağırlık'),
                 keyboardType: TextInputType.number,
               ),
+              TextField(
+                controller: _donguController,
+                decoration: InputDecoration(labelText: 'Döngü Kilo'),
+                keyboardType: TextInputType.number,
+              ),
             ],
           ),
           actions: [
@@ -454,12 +541,14 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     'set': int.parse(_setController.text),
                     'tekrar': int.parse(_tekrarController.text),
                     'agirlik': int.parse(_agirlikController.text),
+                    'donguKilo': int.parse(_donguController.text),
                     'timestamp': FieldValue.serverTimestamp(),
                   });
                   _hareketController.clear();
                   _setController.clear();
                   _tekrarController.clear();
                   _agirlikController.clear();
+                  _donguController.clear();
                   Navigator.of(context).pop();
                 }
               },

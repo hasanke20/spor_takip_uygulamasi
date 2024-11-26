@@ -28,19 +28,18 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.black, // Koyu arka plan rengi
+        backgroundColor: Colors.black,
         body: Center(
           child: FutureBuilder<void>(
             future: _fetchProgramsFuture,
             builder: (context, snapshot) {
-              // ... yükleme ve hata durumları
               return Padding(
-                padding: const EdgeInsets.all(20.0), // Genel padding
+                padding: const EdgeInsets.all(20.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _buildProgramInfoCard(),
-                    SizedBox(height: 10), // Daha fazla boşluk
+                    SizedBox(height: 10),
                     _buildWeightButton(),
                   ],
                 ),
@@ -83,7 +82,7 @@ class _HomeState extends State<Home> {
           Text(
             'Son yapılan program: $lastProgramName',
             style: TextStyle(
-              color: Colors.white70, // Açık gri metin rengi
+              color: Colors.white70,
               fontSize: 20, // Orta boyut
             ),
           ),
@@ -94,7 +93,7 @@ class _HomeState extends State<Home> {
               Text(
                 'Sıradaki Program:',
                 style: TextStyle(
-                  color: Colors.white, // Beyaz metin rengi
+                  color: Colors.white,
                   fontSize: 20,
                 ),
               ),
@@ -108,11 +107,10 @@ class _HomeState extends State<Home> {
                   }
                 },
                 style: TextButton.styleFrom(
-                  backgroundColor: Colors.blue, // Buton rengi
+                  backgroundColor: Colors.blue,
                   padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(15), // Daha yuvarlak buton
+                    borderRadius: BorderRadius.circular(15),
                   ),
                 ),
                 child: Text(
@@ -133,7 +131,7 @@ class _HomeState extends State<Home> {
   Widget _buildWeightButton() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[850], // Koyu gri arka plan
+        color: Colors.grey[850],
         borderRadius: BorderRadius.circular(12),
       ),
       height: MediaQuery.of(context).size.height / 10,
@@ -164,7 +162,7 @@ class _HomeState extends State<Home> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[850], // Koyu gri arka plan
+          backgroundColor: Colors.grey[850],
           title: Text('Tartı Girişi', style: TextStyle(color: Colors.white)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -232,7 +230,6 @@ class _HomeState extends State<Home> {
   Future<void> _fetchPrograms() async {
     String? uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      // Giriş yapmamış kullanıcı için bir mesaj gösterin.
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Lütfen giriş yapın.'),
         backgroundColor: Colors.red,
