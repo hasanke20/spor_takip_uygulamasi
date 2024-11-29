@@ -32,25 +32,27 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     _fetchCycles();
   }
 
+  Future<String> programAdi() async {
+    try {
+      final programAdiSnapshot = await FirebaseFirestore.instance
+          .collection('Users/$uid/Programs')
+          .doc(widget.programId)
+          .get();
+
+      if (programAdiSnapshot.exists && programAdiSnapshot.data() != null) {
+        return programAdiSnapshot.data()!['programAdi'] ?? 'Egzersizler';
+      } else {
+        print('Program adı bulunamadı.');
+        return 'Bilinmeyen Program';
+      }
+    } catch (e) {
+      print('Hata: $e');
+      return 'Hata';
+    }
+  }
+
   Future<void> _fetchCycles() async {
     try {
-      /*final docRef = FirebaseFirestore.instance
-          .collection('Users/$uid/Programs/${widget.programId}/Dongu')
-          .doc('cycle');
-
-      final docSnapshot = await docRef.get();
-
-      if (!docSnapshot.exists) {
-        await docRef.set({
-          'completedCycle': _completedCycle,
-          'targetCycle': _targetCycle,
-        });
-      } else {
-        _completedCycle =
-            docSnapshot.data()?['completedCycle'] ?? _completedCycle;
-        _targetCycle = docSnapshot.data()?['targetCycle'] ?? _targetCycle;
-      }*/
-
       final completedCycleSnapshot = await FirebaseFirestore.instance
           .collection('Users/$uid/Programs/${widget.programId}/Dongu')
           .doc('cycle')
@@ -91,16 +93,32 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
         child: Scaffold(
           backgroundColor: Colors.black,
           appBar: AppBar(
-            title: Text(
-              'Egzersizler',
-              style: TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.grey[900],
             leading: IconButton(
               onPressed: () {
                 Navigator.pop(context);
               },
               icon: Icon(Icons.arrow_back, color: Colors.white),
+            ),
+            backgroundColor: Colors.black,
+            title: FutureBuilder<String>(
+              future: programAdi(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Hata: ${snapshot.error}',
+                      style: TextStyle(color: Colors.red));
+                } else if (snapshot.hasData) {
+                  return Text(
+                    snapshot.data ?? 'Program Adı Yok',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  );
+                } else {
+                  return Text('Program adı alınamadı');
+                }
+              },
             ),
           ),
           body: isDataLoaded
@@ -250,7 +268,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     return Card(
       margin: EdgeInsets.all(10),
       elevation: 5,
-      color: Colors.grey[850],
+      color: Colors.grey[900],
       child: ListTile(
         title: Row(
           children: [
@@ -429,32 +447,86 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Egzersizi Düzenle'),
+          title: Text(
+            'Egzersizi Düzenle',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.grey[900],
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: hareketController,
-                decoration: InputDecoration(labelText: 'Hareket Adı'),
+                decoration: InputDecoration(
+                  labelText: 'Hareket Adı',
+                  labelStyle: TextStyle(color: Colors.white),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                ),
+                style: TextStyle(color: Colors.white),
               ),
               TextField(
                 controller: setController,
-                decoration: InputDecoration(labelText: 'Set'),
+                decoration: InputDecoration(
+                  labelText: 'Set',
+                  labelStyle: TextStyle(color: Colors.white),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                ),
+                style: TextStyle(color: Colors.white),
                 keyboardType: TextInputType.number,
               ),
               TextField(
                 controller: tekrarController,
-                decoration: InputDecoration(labelText: 'Tekrar'),
+                decoration: InputDecoration(
+                  labelText: 'Tekrar',
+                  labelStyle: TextStyle(color: Colors.white),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                ),
+                style: TextStyle(color: Colors.white),
                 keyboardType: TextInputType.number,
               ),
               TextField(
                 controller: agirlikController,
-                decoration: InputDecoration(labelText: 'Ağırlık'),
+                decoration: InputDecoration(
+                  labelText: 'Ağırlık',
+                  labelStyle: TextStyle(color: Colors.white),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                ),
+                style: TextStyle(color: Colors.white),
                 keyboardType: TextInputType.number,
               ),
               TextField(
                 controller: donguKiloController,
-                decoration: InputDecoration(labelText: 'Döngü Kilo'),
+                decoration: InputDecoration(
+                  labelText: 'Döngü Kilo',
+                  labelStyle: TextStyle(color: Colors.white),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                ),
+                style: TextStyle(color: Colors.white),
                 keyboardType: TextInputType.number,
               ),
             ],
@@ -464,7 +536,10 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('İptal'),
+              child: Text(
+                'İptal',
+                style: TextStyle(color: Colors.white), // Buton yazı rengi
+              ),
             ),
             TextButton(
               onPressed: () async {
@@ -477,7 +552,10 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 });
                 Navigator.of(context).pop();
               },
-              child: Text('Kaydet'),
+              child: Text(
+                'Kaydet',
+                style: TextStyle(color: Colors.white), // Buton yazı rengi
+              ),
             ),
           ],
         );

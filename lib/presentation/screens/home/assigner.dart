@@ -39,7 +39,7 @@ class _AssignerState extends State<Assigner> {
       onWillPop: () async {
         bool shouldExit = await _showExitConfirmationDialog();
         if (shouldExit) {
-          Navigator.of(context).pop(); // Sayfayı kapatır
+          Navigator.of(context).pop();
         }
         return Future.value(false);
       },

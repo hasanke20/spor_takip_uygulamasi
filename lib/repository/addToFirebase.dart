@@ -27,15 +27,116 @@ class AddProgram {
       ));
       return;
     }
+
     CollectionReference ref = programRef(uid);
     try {
       DocumentReference docRef = await ref.add({
         'programAdi': programAdi,
         'timestamp': FieldValue.serverTimestamp(),
       });
+
       print("Program başarıyla eklendi: ${docRef.id}");
+      print('$targetCycle');
+      await docRef.collection('Dongu').doc('cycle').set({
+        'targetCycle': targetCycle,
+      });
+
+      print("Alt koleksiyon başarıyla eklendi.");
     } catch (e) {
-      print("Program ekleme hatası: $e");
+      print("Hata oluştu: $e");
+    }
+  }
+}
+
+class ShareProgram {
+  static Future<void> shareProgram(BuildContext context,
+      {required String programId,
+      required String senderId,
+      required String receiverId}) async {
+    try {
+      // Program verisini göndericiden al
+      DocumentSnapshot programSnapshot = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(senderId)
+          .collection('Programs')
+          .doc(programId)
+          .get();
+
+      if (programSnapshot.exists) {
+        Map<String, dynamic> programData =
+            programSnapshot.data() as Map<String, dynamic>;
+
+        // Egzersiz koleksiyonunu al
+        QuerySnapshot exercisesSnapshot = await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(senderId)
+            .collection('Programs')
+            .doc(programId)
+            .collection('Exercises')
+            .get();
+
+        // Döngü koleksiyonunu al
+        QuerySnapshot cyclesSnapshot = await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(senderId)
+            .collection('Programs')
+            .doc(programId)
+            .collection('Cycles')
+            .get();
+
+        // Yeni program ID'si oluştur ve alıcıya gönder
+        String receiverIdString = receiverId; // String'e çevir
+        String newProgramId = FirebaseFirestore.instance
+            .collection('Users')
+            .doc(receiverIdString)
+            .collection('Programs')
+            .doc()
+            .id;
+
+        // Program verisini alıcıya kopyala
+        await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(receiverIdString)
+            .collection('Programs')
+            .doc(newProgramId)
+            .set(programData);
+
+        // Egzersiz koleksiyonunu alıcıya kopyala
+        for (var exerciseDoc in exercisesSnapshot.docs) {
+          await FirebaseFirestore.instance
+              .collection('Users')
+              .doc(receiverIdString)
+              .collection('Programs')
+              .doc(newProgramId)
+              .collection('Exercises')
+              .doc(exerciseDoc.id)
+              .set(exerciseDoc.data() as Map<String, dynamic>);
+        }
+
+        // Döngü koleksiyonunu alıcıya kopyala
+        for (var cycleDoc in cyclesSnapshot.docs) {
+          await FirebaseFirestore.instance
+              .collection('Users')
+              .doc(receiverIdString)
+              .collection('Programs')
+              .doc(newProgramId)
+              .collection('Cycles')
+              .doc(cycleDoc.id)
+              .set(cycleDoc.data() as Map<String, dynamic>);
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Program başarıyla paylaşıldı!'),
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Program bulunamadı!'),
+        ));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Hata: $e'),
+      ));
     }
   }
 }
@@ -258,8 +359,8 @@ class SignInWithGoogle {
       // Kullanıcı bilgilerini Firestore'a kaydet
       await usersRef.doc(userCredential.user!.uid).set({
         'name': userCredential.user!.displayName,
-        'email': userCredential
-            .user!.email, // Kullanıcının Google hesabındaki e-posta
+        'email': userCredential.user!.email,
+        'username': userCredential.user!.displayName ?? 'Kullanıcı Adı Yok',
       });
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -368,9 +469,6 @@ Future<void> incrementCompletedCycles(String programId) async {
     int targetCycle =
         (snapshot.data() as Map<String, dynamic>?)?['targetCycle'] ?? 0;
 
-    double donguKilo =
-        (snapshot.data() as Map<String, dynamic>?)?['donguKilo'] ?? 0.0;
-
     completedCycle++;
     if (completedCycle >= targetCycle) {
       print('$completedCycle');
@@ -386,7 +484,12 @@ Future<void> incrementCompletedCycles(String programId) async {
         double currentWeight =
             (exercise.data() as Map<String, dynamic>)['agirlik'].toDouble() ??
                 0.0;
-        print('currentWeight alindi');
+        print('currentWeight: $currentWeight');
+
+        double donguKilo =
+            (exercise.data() as Map<String, dynamic>)['donguKilo'].toDouble() ??
+                0.0;
+        print('donguKilo: $currentWeight');
 
         await FirebaseFirestore.instance
             .collection('Users/$uid/Programs/$programId/Exercises')
@@ -402,7 +505,6 @@ Future<void> incrementCompletedCycles(String programId) async {
         .set({
       'targetCycle': targetCycle,
       'completedCycle': completedCycle,
-      'donguKilo': donguKilo,
     });
 
     print("completedCycle değeri başarıyla artırıldı.");

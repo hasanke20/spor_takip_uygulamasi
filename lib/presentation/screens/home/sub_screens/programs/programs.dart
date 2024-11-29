@@ -38,7 +38,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
             children: snapshot.data!.docs.map((doc) {
               return Card(
                 margin: EdgeInsets.all(8.0),
-                color: Colors.grey[850],
+                color: Colors.grey[900],
                 child: ListTile(
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -52,6 +52,12 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                       ),
                       Row(
                         children: [
+                          IconButton(
+                            icon: Icon(Icons.share, color: Colors.white),
+                            onPressed: () {
+                              _shareProgram(context, doc);
+                            },
+                          ),
                           IconButton(
                             icon: Icon(Icons.edit, color: Colors.white),
                             onPressed: () {
@@ -126,7 +132,12 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                   decoration: InputDecoration(
                       labelText: 'Döngü',
                       labelStyle: TextStyle(color: Colors.white)),
-                  onChanged: (value) => targetCycle,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    if (value.isNotEmpty) {
+                      targetCycle = int.tryParse(value) ?? 3;
+                    }
+                  },
                   validator: (value) =>
                       value!.isEmpty ? 'Bu alan boş olamaz.' : null,
                   style: TextStyle(color: Colors.white),
@@ -201,6 +212,77 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                 }
               },
               child: Text('Güncelle', style: TextStyle(color: Colors.blue)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  bool _isElevenDigits(int number) {
+    if (number >= 10000000000 && number < 100000000000) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future<bool> isUserExists(String receiverId) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(receiverId)
+          .get();
+      return true;
+    } catch (e) {
+      print('Hata: $e');
+      return false;
+    }
+  }
+
+  void _shareProgram(BuildContext context, DocumentSnapshot doc) {
+    String? receiverId;
+    String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: Text('Programı Paylaş', style: TextStyle(color: Colors.white)),
+          content: Form(
+            child: TextFormField(
+              decoration: InputDecoration(
+                labelText: "Alıcının Kullanıcı ID'si",
+                labelStyle: TextStyle(color: Colors.white),
+              ),
+              initialValue: receiverId?.toString(),
+              onChanged: (value) {
+                receiverId = value;
+              },
+              validator: (value) =>
+                  value!.isEmpty ? 'Bu alan boş olamaz.' : null,
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                if (receiverId != null &&
+                    await isUserExists(receiverId.toString()) == true) {
+                  ShareProgram.shareProgram(
+                    context,
+                    programId: doc.id,
+                    senderId: uid.toString(),
+                    receiverId: receiverId!.toString(),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Geçerli bir Kullanıcı ID girin!'),
+                  ));
+                }
+              },
+              child: Text('Paylaş', style: TextStyle(color: Colors.blue)),
             ),
           ],
         );

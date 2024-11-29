@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
@@ -58,10 +59,13 @@ class _ProfilScreenState extends State<ProfilScreen> {
     }
   }
 
+  String? uid = FirebaseAuth.instance.currentUser?.uid;
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: Colors.black,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -75,7 +79,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                 Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.black,
+                    color: Colors.grey[900],
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: Colors.black,
@@ -84,12 +88,32 @@ class _ProfilScreenState extends State<ProfilScreen> {
                   ),
                   child: Column(
                     children: [
+                      TextButton(
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: '$uid'))
+                                .then((_) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Kullanıcı ID\'si panoya kopyalandı!')),
+                              );
+                            });
+                          },
+                          child: Text(
+                            'Kullanıcı ID: $uid',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          )),
+                      SizedBox(
+                        height: 8,
+                      ),
                       Text(
                         'Username: ${username ?? 'Bilinmiyor'}',
                         style: TextStyle(color: Colors.white),
                       ),
                       SizedBox(
-                        height: 30,
+                        height: 20,
                       ),
                       Text(
                         'Email: ${email ?? 'Bilinmiyor'}',

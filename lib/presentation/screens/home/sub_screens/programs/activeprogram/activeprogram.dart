@@ -145,7 +145,7 @@ class _ActiveProgramState extends State<ActiveProgram> {
                     Container(
                       width: 300,
                       decoration: BoxDecoration(
-                        color: Colors.grey[850],
+                        color: Colors.grey[900],
                         borderRadius: BorderRadius.circular(15.0),
                         boxShadow: [
                           BoxShadow(
@@ -193,7 +193,7 @@ class _ActiveProgramState extends State<ActiveProgram> {
                           child: Container(
                             margin: EdgeInsets.all(8.0),
                             decoration: BoxDecoration(
-                              color: Colors.grey[850],
+                              color: Colors.grey[900],
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                             child: TextButton(
@@ -220,7 +220,7 @@ class _ActiveProgramState extends State<ActiveProgram> {
                           child: Container(
                             margin: EdgeInsets.all(8.0),
                             decoration: BoxDecoration(
-                              color: Colors.grey[850],
+                              color: Colors.grey[900],
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                             child: TextButton(
@@ -248,7 +248,7 @@ class _ActiveProgramState extends State<ActiveProgram> {
                       Container(
                         margin: EdgeInsets.all(8.0),
                         decoration: BoxDecoration(
-                          color: Colors.grey[850],
+                          color: Colors.grey[900],
                           borderRadius: BorderRadius.circular(12.0),
                         ),
                         child: TextButton(
@@ -282,7 +282,7 @@ Future<void> incrementCompletedCycle(String programId) async {
   }
 
   try {
-    incrementCompletedCycles(programId);
+    await incrementCompletedCycles(programId);
 
     print("completedCycle değeri başarıyla artırıldı.");
   } catch (error) {

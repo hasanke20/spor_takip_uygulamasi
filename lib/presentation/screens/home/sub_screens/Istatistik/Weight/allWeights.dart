@@ -227,7 +227,7 @@ class _AllWeightsState extends State<AllWeights> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[850],
+          backgroundColor: Colors.grey[900],
           title: const Text('Tüm Ölçümleri Sil',
               style: TextStyle(color: Colors.white)),
           content: const Text(
@@ -262,7 +262,7 @@ class _AllWeightsState extends State<AllWeights> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[850],
+          backgroundColor: Colors.grey[900],
           title: const Text('Düzenle', style: TextStyle(color: Colors.white)),
           content: TextField(
             controller: weightController,
@@ -323,7 +323,7 @@ class _AllWeightsState extends State<AllWeights> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[850],
+          backgroundColor: Colors.grey[900],
           title: const Text('Kilo Ekle', style: TextStyle(color: Colors.white)),
           content: TextField(
             controller: weightController,

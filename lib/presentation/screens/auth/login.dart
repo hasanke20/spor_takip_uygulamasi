@@ -155,12 +155,10 @@ class _LoginScreenState extends State<LoginScreen> {
             },
           ),
           enabledBorder: UnderlineInputBorder(
-            borderSide:
-                BorderSide(color: Colors.grey), // Aktif olmayan kenar rengi
+            borderSide: BorderSide(color: Colors.grey),
           ),
           focusedBorder: UnderlineInputBorder(
-            borderSide:
-                BorderSide(color: Colors.blueAccent), // Aktif kenar rengi
+            borderSide: BorderSide(color: Colors.blueAccent),
           ),
         ),
         obscureText: !_isPasswordVisible,
@@ -259,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
       initialLabelIndex: _toggleIndex,
       cornerRadius: 20.0,
       activeFgColor: Colors.white,
-      inactiveBgColor: Colors.grey[800],
+      inactiveBgColor: Colors.grey[900],
       inactiveFgColor: Colors.white,
       totalSwitches: 2,
       labels: ['Giriş', 'Kayıt Ol'],

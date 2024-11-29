@@ -131,7 +131,7 @@ class _HomeState extends State<Home> {
   Widget _buildWeightButton() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[850],
+        color: Colors.grey[900],
         borderRadius: BorderRadius.circular(12),
       ),
       height: MediaQuery.of(context).size.height / 10,
@@ -162,7 +162,7 @@ class _HomeState extends State<Home> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[850],
+          backgroundColor: Colors.grey[900],
           title: Text('Tartı Girişi', style: TextStyle(color: Colors.white)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
