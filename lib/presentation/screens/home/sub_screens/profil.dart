@@ -70,12 +70,8 @@ class _ProfilScreenState extends State<ProfilScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(child: Text('Profile Screen')),
               if (isLoading) CircularProgressIndicator(),
               if (!isLoading) ...[
-                SizedBox(
-                  height: 80,
-                ),
                 Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(

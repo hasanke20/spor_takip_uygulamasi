@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spor_takip_uygulamasi/repository/addToFirebase.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 
@@ -17,6 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
       initialRoute: '/',
       getPages: [
         GetPage(
@@ -41,9 +43,58 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
+  bool _rememberMe = false;
   int _toggleIndex = 0;
   bool _isPasswordVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberMe();
+  }
+
+  Future<void> _loadRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _rememberMe = prefs.getBool('rememberMe') ?? false;
+      if (_rememberMe) {
+        _emailController.text = prefs.getString('email') ?? '';
+        _passwordController.text = prefs.getString('password') ?? '';
+      }
+    });
+  }
+
+// Kullanıcı oturum bilgilerini kaydet
+  Future<void> _saveUserCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_rememberMe) {
+      await prefs.setBool('rememberMe', true);
+      await prefs.setString('email', _emailController.text);
+      await prefs.setString('password', _passwordController.text);
+    } else {
+      await prefs.clear(); // "Beni Hatırla" seçili değilse bilgileri temizle
+    }
+  }
+
+// Login butonuna tıklandığında çağrılacak
+  Future<void> _handleLogin() async {
+    try {
+      User? user = await LoginUser.login(
+        context,
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      if (user != null) {
+        await _saveUserCredentials(); // Oturum bilgilerini kaydet
+        Get.to(Assigner());
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Giriş yapılamadı: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,10 +132,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     Expanded(
-                      child: Column(
+                      child:
+                          SignInButtons() /*Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          if (_toggleIndex == 1) ...[
+                          */ /*if (_toggleIndex == 1) ...[
                             _buildTextField(
                               controller: _userNameController,
                               label: 'Kullanıcı Adı',
@@ -95,9 +147,25 @@ class _LoginScreenState extends State<LoginScreen> {
                             label: 'Email',
                           ),
                           _buildPasswordField(),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _rememberMe,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _rememberMe = value!;
+                                  });
+                                },
+                              ),
+                              Text(
+                                "Beni Hatırla",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
                           SizedBox(height: 20),
                           _buildActionButton(),
-                          SizedBox(height: 20),
+                          SizedBox(height: 20),*/ /*
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blueAccent, // Buton rengi
@@ -121,8 +189,33 @@ class _LoginScreenState extends State<LoginScreen> {
                                   TextStyle(color: Colors.white), // Metin rengi
                             ),
                           ),
+                          SizedBox(height: 20),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent, // Buton rengi
+                            ),
+                            onPressed: () async {
+                              bool isSuccess =
+                                  await AppleSignInService.signIn(context);
+                              if (isSuccess) {
+                                Get.to(Assigner());
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(
+                                          'Giriş yapılamadı, lütfen tekrar deneyin.')),
+                                );
+                              }
+                            },
+                            child: Text(
+                              'Apple ile Giriş Yap',
+                              style:
+                                  TextStyle(color: Colors.white), // Metin rengi
+                            ),
+                          ),
                         ],
-                      ),
+                      )*/
+                      ,
                     ),
                   ],
                 ),
@@ -271,6 +364,122 @@ class _LoginScreenState extends State<LoginScreen> {
           _toggleIndex = index ?? 0;
         });
       },
+    );
+  }
+}
+
+class SignInButtons extends StatelessWidget {
+  const SignInButtons({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Google ile Giriş Yap Butonu
+        GestureDetector(
+          onTap: () async {
+            bool isSuccess = await SignInWithGoogle.signIn(context);
+            if (isSuccess) {
+              // Başarılı giriş sonrası yönlendirme
+              print("Google ile giriş başarılı!");
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Google ile giriş yapılamadı, tekrar deneyin!'),
+                ),
+              );
+            }
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white, // Beyaz arka plan
+              borderRadius:
+                  BorderRadius.circular(8.0), // Yuvarlatılmış kenarlar
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            margin: EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/google_logo.png', // Google logosunun yolu
+                  height: 24,
+                  width: 24,
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'Google ile Giriş Yap',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 16), // Butonlar arasında boşluk
+        // Apple ile Giriş Yap Butonu
+        GestureDetector(
+          onTap: () async {
+            bool isSuccess = await AppleSignInService.signIn(context);
+            if (isSuccess) {
+              // Başarılı giriş sonrası yönlendirme
+              print("Apple ile giriş başarılı!");
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Apple ile giriş yapılamadı, tekrar deneyin!'),
+                ),
+              );
+            }
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[900], // Siyah arka plan
+              borderRadius:
+                  BorderRadius.circular(8.0), // Yuvarlatılmış kenarlar
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            margin: EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/apple_logo.png', // Apple logosunun yolu
+                  height: 24,
+                  width: 24,
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'Apple ile Giriş Yap',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

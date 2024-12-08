@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AddProgram {
   static CollectionReference programRef(String uid) {
@@ -81,11 +83,11 @@ class ShareProgram {
             .doc(senderId)
             .collection('Programs')
             .doc(programId)
-            .collection('Cycles')
+            .collection('Dongu')
             .get();
 
         // Yeni program ID'si oluştur ve alıcıya gönder
-        String receiverIdString = receiverId; // String'e çevir
+        String receiverIdString = receiverId;
         String newProgramId = FirebaseFirestore.instance
             .collection('Users')
             .doc(receiverIdString)
@@ -120,7 +122,7 @@ class ShareProgram {
               .doc(receiverIdString)
               .collection('Programs')
               .doc(newProgramId)
-              .collection('Cycles')
+              .collection('Dongu')
               .doc(cycleDoc.id)
               .set(cycleDoc.data() as Map<String, dynamic>);
         }
@@ -326,12 +328,12 @@ class SignInWithGoogle {
   static CollectionReference usersRef =
       FirebaseFirestore.instance.collection('Users');
 
-  static Future<bool> signIn(BuildContext context) async {
+  static Future<bool> signIn(BuildContext context,
+      {bool rememberMe = false}) async {
     try {
-      // GoogleSignIn nesnesini oluştur
       final GoogleSignIn googleSignIn = GoogleSignIn();
 
-      // Google ile oturum açmayı başlat
+      // Kullanıcı oturum açmayı başlatıyor
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       // Kullanıcı oturum açmayı iptal ettiyse
@@ -342,32 +344,42 @@ class SignInWithGoogle {
         return false;
       }
 
-      // Google kimlik doğrulaması
+      // Google kimlik doğrulama bilgileri
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      // Firebase kimlik bilgileri oluştur
+      // Firebase kimlik bilgileri oluşturuluyor
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Firebase ile oturum aç
+      // Firebase ile oturum açma işlemi
       final UserCredential userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
 
-      // Kullanıcı bilgilerini Firestore'a kaydet
+      // Kullanıcı bilgilerini Firestore'a kaydetme
       await usersRef.doc(userCredential.user!.uid).set({
         'name': userCredential.user!.displayName,
         'email': userCredential.user!.email,
         'username': userCredential.user!.displayName ?? 'Kullanıcı Adı Yok',
       });
 
+      // "Beni Hatırla" özelliği etkinse oturum bilgilerini kaydet
+      if (rememberMe) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('rememberMe', true);
+        await prefs.setString('email', userCredential.user!.email ?? '');
+        // Şifre Google ile girişte gerekmediği için saklanmaz
+      }
+
+      // Başarılı giriş mesajı
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Oturum açıldı: ${userCredential.user!.displayName}'),
       ));
       return true;
     } catch (e) {
+      // Hata mesajı gösterme
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Oturum açarken hata oluştu: $e'),
       ));
@@ -375,12 +387,73 @@ class SignInWithGoogle {
     }
   }
 
-  static void signOut(BuildContext context) async {
-    await FirebaseAuth.instance.signOut();
-    await GoogleSignIn().signOut();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Başarıyla çıkış yapıldı.'),
-    ));
+  static Future<void> signOut(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      await GoogleSignIn().signOut();
+
+      // SharedPreferences'taki bilgileri temizle
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      // Başarılı çıkış mesajı
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Başarıyla çıkış yapıldı.'),
+      ));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Çıkış sırasında bir hata oluştu: $e'),
+      ));
+    }
+  }
+}
+
+class AppleSignInService {
+  static CollectionReference usersRef =
+      FirebaseFirestore.instance.collection('Users');
+
+  static Future<bool> signIn(BuildContext context,
+      {bool rememberMe = false}) async {
+    try {
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      final oauthCredential = OAuthProvider("apple.com").credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(oauthCredential);
+
+      await usersRef.doc(userCredential.user!.uid).set({
+        'name': appleCredential.givenName ?? 'Kullanıcı Adı Yok',
+        'email': userCredential.user!.email ?? 'Email Yok',
+        'username': appleCredential.givenName ?? 'Kullanıcı Adı Yok',
+      });
+
+      if (rememberMe) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('rememberMe', true);
+        await prefs.setString(
+            'email', userCredential.user!.email ?? 'Email Yok');
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            'Oturum açıldı: ${userCredential.user!.email ?? 'Apple Kullanıcısı'}'),
+      ));
+      return true;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Apple ile giriş yaparken hata oluştu: $e'),
+      ));
+      return false;
+    }
   }
 }
 
@@ -388,22 +461,35 @@ class RegisterUser {
   static CollectionReference usersRef =
       FirebaseFirestore.instance.collection('Users');
 
-  static Future<void> registerNewUser(BuildContext context, String username,
-      String email, String password) async {
+  static Future<void> registerNewUser(
+      BuildContext context, String username, String email, String password,
+      {bool rememberMe = false}) async {
     try {
+      // Firebase ile kullanıcı kaydı oluştur
       UserCredential userBilgileri = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
 
+      // Kullanıcı bilgilerini Firestore'a kaydet
       await usersRef.doc(userBilgileri.user!.uid).set({
         'username': username,
         'email': email,
         'password': password,
       });
 
+      // Eğer "Beni Hatırla" seçiliyse bilgileri kaydet
+      if (rememberMe) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('rememberMe', true);
+        await prefs.setString('email', email);
+        await prefs.setString('password', password);
+      }
+
+      // Başarılı kayıt mesajı
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Kullanıcı başarıyla kaydedildi!'),
       ));
     } on FirebaseAuthException catch (e) {
+      // Firebase özel hatalarını yönet
       if (e.code == 'weak-password') {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Girilen şifre çok zayıf.'),
@@ -418,22 +504,44 @@ class RegisterUser {
         ));
       }
     } catch (e) {
+      // Genel hataları yönet
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Bir hata oluştu: $e'),
       ));
     }
   }
+
+  // Kaydedilmiş oturum bilgilerini temizleme
+  static Future<void> clearSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
 }
 
 class LoginUser {
   static Future<User?> login(
-      BuildContext context, String email, String password) async {
+      BuildContext context, String email, String password,
+      {bool rememberMe = false}) async {
     try {
+      // Firebase ile giriş
       UserCredential userBilgisi = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
+
+      // Eğer "Beni Hatırla" işaretliyse, bilgileri kaydet
+      if (rememberMe) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('rememberMe', true);
+        await prefs.setString('email', email);
+        await prefs.setString('password', password);
+      } else {
+        // "Beni Hatırla" seçili değilse bilgileri temizle
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+      }
+
       return userBilgisi.user;
     } on FirebaseAuthException catch (e) {
-      // Hata oluşursa, hata mesajını döndürün.
+      // Firebase hatalarını yönet
       String errorMessage;
 
       if (e.code == 'user-not-found') {
@@ -447,7 +555,29 @@ class LoginUser {
       throw Exception(errorMessage);
     }
   }
+
+  // Kaydedilmiş kullanıcı bilgilerini yüklemek için yardımcı fonksiyon
+  static Future<Map<String, String?>> getSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool rememberMe = prefs.getBool('rememberMe') ?? false;
+
+    if (rememberMe) {
+      return {
+        'email': prefs.getString('email'),
+        'password': prefs.getString('password'),
+      };
+    }
+    return {'email': null, 'password': null};
+  }
+
+  // Kullanıcının oturum bilgilerini temizle
+  static Future<void> clearSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
 }
+
+class EditWeight {}
 
 Future<void> incrementCompletedCycles(String programId) async {
   String? uid = FirebaseAuth.instance.currentUser?.uid;

@@ -17,7 +17,9 @@ class _EmptyScreenState extends State<EmptyScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                  'This screen is empty. Please add some feature in this page.'),
+                '!!!Coming Soon!!!',
+                style: TextStyle(fontSize: 30),
+              ),
             ],
           ),
         ),

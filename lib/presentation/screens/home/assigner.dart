@@ -1,10 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/home.dart';
 import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/profil.dart';
 import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/programs/programs.dart';
 
+import '../auth/login.dart';
 import 'sub_screens/Istatistik/istatistik.dart';
 import 'sub_screens/empty.dart';
 
@@ -38,17 +40,17 @@ class _AssignerState extends State<Assigner> {
     return WillPopScope(
       onWillPop: () async {
         bool shouldExit = await _showExitConfirmationDialog();
-        if (shouldExit) {
-          Navigator.of(context).pop();
-        }
-        return Future.value(false);
+        return shouldExit;
       },
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
           leading: IconButton(
-            onPressed: () {
-              _showExitConfirmationDialog();
+            onPressed: () async {
+              bool shouldExit = await _showExitConfirmationDialog();
+              if (shouldExit) {
+                Get.to(LoginScreen());
+              }
             },
             icon: Icon(Icons.arrow_back, color: Colors.white),
           ),

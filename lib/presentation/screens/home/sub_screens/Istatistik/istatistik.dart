@@ -17,7 +17,7 @@ class _IstatisticScreenState extends State<IstatisticScreen> {
   double? _minYValue;
   double? _maxYValue;
   List<double> _lastTwoWeights = [];
-  double? _initialWeight; // Firebase'den alınan ilk kilo değeri
+  double? _initialWeight;
 
   @override
   void initState() {
@@ -64,7 +64,6 @@ class _IstatisticScreenState extends State<IstatisticScreen> {
           _minYValue = minWeight - 5;
           _maxYValue = maxWeight + 5;
 
-          // Son iki ölçümü al
           if (allData.isNotEmpty) {
             _lastTwoWeights = allData.map((data) => data.weight).toList();
             if (_lastTwoWeights.length > 2) {
@@ -101,135 +100,151 @@ class _IstatisticScreenState extends State<IstatisticScreen> {
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade800,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height / 4,
-                      child: SfCartesianChart(
-                        title: ChartTitle(
-                          text: 'Kilo Takibi',
-                          textStyle: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Colors.white,
-                          ),
-                        ),
-                        legend: Legend(
-                          isVisible: false,
-                          textStyle: TextStyle(color: Colors.white),
-                        ),
-                        primaryXAxis: CategoryAxis(
-                          labelStyle: TextStyle(color: Colors.white),
-                        ),
-                        primaryYAxis: NumericAxis(
-                          minimum: _minYValue,
-                          maximum: _maxYValue,
-                          labelFormat: '{value} kg',
-                          labelStyle: TextStyle(color: Colors.white),
-                        ),
-                        series: <LineSeries<ChartData, String>>[
-                          LineSeries<ChartData, String>(
-                            dataSource: _chartData,
-                            xValueMapper: (ChartData data, _) => data.week,
-                            yValueMapper: (ChartData data, _) => data.weight,
-                            name: 'Kilo',
-                            color: Colors.blue,
-                            markerSettings:
-                                const MarkerSettings(isVisible: true),
-                          ),
-                        ],
-                      ),
+              child: Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade800,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 8),
-                    Column(
+                    child: Column(
                       children: [
-                        Card(
-                          color: Colors.grey.shade700,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height / 4,
+                          child: SfCartesianChart(
+                            title: ChartTitle(
+                              text: 'Kilo Takibi',
+                              textStyle: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                            legend: Legend(
+                              isVisible: false,
+                              textStyle: TextStyle(color: Colors.white),
+                            ),
+                            primaryXAxis: CategoryAxis(
+                              labelStyle: TextStyle(color: Colors.white),
+                            ),
+                            primaryYAxis: NumericAxis(
+                              minimum: _minYValue,
+                              maximum: _maxYValue,
+                              labelFormat: '{value} kg',
+                              labelStyle: TextStyle(color: Colors.white),
+                            ),
+                            series: <LineSeries<ChartData, String>>[
+                              LineSeries<ChartData, String>(
+                                dataSource: _chartData,
+                                xValueMapper: (ChartData data, _) => data.week,
+                                yValueMapper: (ChartData data, _) =>
+                                    data.weight,
+                                name: 'Kilo',
+                                color: Colors.blue,
+                                markerSettings:
+                                    const MarkerSettings(isVisible: true),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Column(
+                          children: [
+                            Card(
+                              color: Colors.grey.shade700,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    const Text('Son Ölçüm',
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 16)),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade800,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        latestWeight != null
-                                            ? '$latestWeight kg'
-                                            : 'Veri yok',
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 20),
-                                      ),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Text('Son Ölçüm',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16)),
+                                        const SizedBox(height: 4),
+                                        Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade800,
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            latestWeight != null
+                                                ? '$latestWeight kg'
+                                                : 'Veri yok',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 20),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Text('Toplam Değişim',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16)),
+                                        const SizedBox(height: 4),
+                                        Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade800,
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            changeFromInitial != null
+                                                ? '${changeFromInitial >= 0 ? '+' : ''}${changeFromInitial.toStringAsFixed(1)} kg'
+                                                : 'Veri yok',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 20),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text('Toplam Değişim',
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 16)),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade800,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        changeFromInitial != null
-                                            ? '${changeFromInitial >= 0 ? '+' : ''}${changeFromInitial.toStringAsFixed(1)} kg'
-                                            : 'Veri yok',
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 20),
-                                      ),
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8.0, horizontal: 16.0),
+                                  child: TextButton(
+                                    style: ButtonStyle(
+                                      backgroundColor:
+                                          MaterialStateProperty.all(
+                                              Colors.grey.shade700),
+                                      foregroundColor:
+                                          MaterialStateProperty.all(
+                                              Colors.white),
                                     ),
-                                  ],
+                                    onPressed: () {
+                                      Get.to(AllWeights());
+                                    },
+                                    child: Text('Tümünü Gör'),
+                                  ),
                                 ),
                               ],
-                            ),
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 8.0, horizontal: 16.0),
-                              child: TextButton(
-                                style: ButtonStyle(
-                                  backgroundColor: MaterialStateProperty.all(
-                                      Colors.grey.shade700),
-                                  foregroundColor:
-                                      MaterialStateProperty.all(Colors.white),
-                                ),
-                                onPressed: () {
-                                  Get.to(AllWeights());
-                                },
-                                child: Text('Tümünü Gör'),
-                              ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
