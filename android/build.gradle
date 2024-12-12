@@ -1,3 +1,5 @@
+
+
 buildscript {
     repositories {
         google()
@@ -6,9 +8,11 @@ buildscript {
     dependencies {
         // Diğer bağımlılıklarınız varsa ekleyin
         classpath 'com.android.tools.build:gradle:7.4.2' // Sürümü ihtiyaca göre güncelleyin
-        classpath 'com.google.gms:google-services:4.3.10' // Firebase için gerekli eklenti
+        classpath 'com.google.gms:google-services:4.3.15' // Firebase için gerekli eklenti
     }
 }
+
+
 
 plugins {
     // Add the dependency for the Google services Gradle plugin

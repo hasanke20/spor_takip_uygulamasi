@@ -333,10 +333,8 @@ class SignInWithGoogle {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn();
 
-      // Kullanıcı oturum açmayı başlatıyor
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
-      // Kullanıcı oturum açmayı iptal ettiyse
       if (googleUser == null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Oturum açma iptal edildi.'),
@@ -344,42 +342,34 @@ class SignInWithGoogle {
         return false;
       }
 
-      // Google kimlik doğrulama bilgileri
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      // Firebase kimlik bilgileri oluşturuluyor
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Firebase ile oturum açma işlemi
       final UserCredential userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
 
-      // Kullanıcı bilgilerini Firestore'a kaydetme
       await usersRef.doc(userCredential.user!.uid).set({
         'name': userCredential.user!.displayName,
         'email': userCredential.user!.email,
         'username': userCredential.user!.displayName ?? 'Kullanıcı Adı Yok',
       });
 
-      // "Beni Hatırla" özelliği etkinse oturum bilgilerini kaydet
       if (rememberMe) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('rememberMe', true);
         await prefs.setString('email', userCredential.user!.email ?? '');
-        // Şifre Google ile girişte gerekmediği için saklanmaz
       }
 
-      // Başarılı giriş mesajı
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Oturum açıldı: ${userCredential.user!.displayName}'),
       ));
       return true;
     } catch (e) {
-      // Hata mesajı gösterme
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Oturum açarken hata oluştu: $e'),
       ));

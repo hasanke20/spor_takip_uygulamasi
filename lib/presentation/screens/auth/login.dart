@@ -132,22 +132,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     Expanded(
-                      child:
-                          SignInButtons() /*Column(
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          */ /*if (_toggleIndex == 1) ...[
-                            _buildTextField(
-                              controller: _userNameController,
-                              label: 'Kullanıcı Adı',
-                            ),
-                          ],
-                          _buildTextField(
-                            controller: _emailController,
-                            label: 'Email',
+                          SignInButtons(
+                            rememberMe: _rememberMe,
+                            saveUserCredentials: _saveUserCredentials,
                           ),
-                          _buildPasswordField(),
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Checkbox(
                                 value: _rememberMe,
@@ -163,59 +156,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 20),
-                          _buildActionButton(),
-                          SizedBox(height: 20),*/ /*
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent, // Buton rengi
-                            ),
-                            onPressed: () async {
-                              bool isSuccess =
-                                  await SignInWithGoogle.signIn(context);
-                              if (isSuccess) {
-                                Get.to(Assigner());
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          'Giriş yapılamadı, lütfen tekrar deneyin.')),
-                                );
-                              }
-                            },
-                            child: Text(
-                              'Google ile Giriş Yap',
-                              style:
-                                  TextStyle(color: Colors.white), // Metin rengi
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent, // Buton rengi
-                            ),
-                            onPressed: () async {
-                              bool isSuccess =
-                                  await AppleSignInService.signIn(context);
-                              if (isSuccess) {
-                                Get.to(Assigner());
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          'Giriş yapılamadı, lütfen tekrar deneyin.')),
-                                );
-                              }
-                            },
-                            child: Text(
-                              'Apple ile Giriş Yap',
-                              style:
-                                  TextStyle(color: Colors.white), // Metin rengi
-                            ),
-                          ),
                         ],
-                      )*/
-                      ,
+                      ),
                     ),
                   ],
                 ),
@@ -227,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildPasswordField() {
+  /*Widget _buildPasswordField() {
     return SizedBox(
       width: (MediaQuery.of(context).size.width * 3) / 5,
       child: TextFormField(
@@ -342,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       },
     );
-  }
+  }*/
 
   Widget _buildToggleSwitch() {
     return ToggleSwitch(
@@ -369,8 +311,14 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 class SignInButtons extends StatelessWidget {
-  const SignInButtons({Key? key}) : super(key: key);
+  final bool rememberMe;
+  final Future<void> Function() saveUserCredentials;
 
+  const SignInButtons({
+    Key? key,
+    required this.rememberMe,
+    required this.saveUserCredentials,
+  }) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -379,10 +327,15 @@ class SignInButtons extends StatelessWidget {
         // Google ile Giriş Yap Butonu
         GestureDetector(
           onTap: () async {
-            bool isSuccess = await SignInWithGoogle.signIn(context);
+            bool isSuccess = await SignInWithGoogle.signIn(
+              context,
+              rememberMe: rememberMe,
+            );
             if (isSuccess) {
-              // Başarılı giriş sonrası yönlendirme
-              print("Google ile giriş başarılı!");
+              if (rememberMe) {
+                await saveUserCredentials();
+              }
+              Get.to(Assigner());
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -393,9 +346,8 @@ class SignInButtons extends StatelessWidget {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white, // Beyaz arka plan
-              borderRadius:
-                  BorderRadius.circular(8.0), // Yuvarlatılmış kenarlar
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.0),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -410,7 +362,7 @@ class SignInButtons extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
-                  'assets/images/google_logo.png', // Google logosunun yolu
+                  'assets/images/google_logo.png',
                   height: 24,
                   width: 24,
                 ),

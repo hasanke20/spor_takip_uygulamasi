@@ -6,6 +6,8 @@ plugins {
     id 'com.google.gms.google-services' version '4.3.15' apply false
 }
 
+
+
 dependencies {
     // Import the Firebase BoM
     implementation platform('com.google.firebase:firebase-bom:33.4.0')
@@ -29,6 +31,15 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 
+    signingConfigs {
+        release {
+            keyAlias MY_KEY_ALIAS
+            keyPassword MY_KEY_PASSWORD
+            storeFile file('my-release-key.jks')
+            storePassword MY_KEYSTORE_PASSWORD
+        }
+    }
+
     defaultConfig {
         applicationId = "com.hcode.spor_takip_uygulamasi"
         minSdkVersion 23
@@ -39,7 +50,10 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
@@ -48,5 +62,4 @@ flutter {
     source = "../.."
 }
 
-// Google Services Plugin'i burada ekleyin
 apply plugin: 'com.google.gms.google-services'

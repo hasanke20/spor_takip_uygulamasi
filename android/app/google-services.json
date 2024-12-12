@@ -2,14 +2,14 @@
   "project_info": {
     "project_number": "773843122627",
     "project_id": "hcode-spor-takip-programi",
-    "storage_bucket": "hcode-spor-takip-programi.appspot.com"
+    "storage_bucket": "hcode-spor-takip-programi.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
         "mobilesdk_app_id": "1:773843122627:android:1e70f11942671cc48be576",
         "android_client_info": {
-          "package_name": "hcode-spor-takip-programi.appspot.com"
+          "package_name": "com.android.application"
         }
       },
       "oauth_client": [
@@ -85,6 +85,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "773843122627-g6vhvp7kj3t2pu4s29jdhcom7fafqkh4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hcode.spor_takip_uygulamasi",
+            "certificate_hash": "66077abf2a26510b36f307889823ce59f3019aa8"
+          }
+        },
         {
           "client_id": "773843122627-katj53i1bjej2qsqlucd5co03ljgbmqp.apps.googleusercontent.com",
           "client_type": 1,
