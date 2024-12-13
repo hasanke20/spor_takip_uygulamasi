@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Weight Tracker',
+      title: 'Ronin',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         textTheme: GoogleFonts.agdasimaTextTheme(),

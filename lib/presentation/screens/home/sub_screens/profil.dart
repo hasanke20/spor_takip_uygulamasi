@@ -85,28 +85,20 @@ class _ProfilScreenState extends State<ProfilScreen> {
                   child: Column(
                     children: [
                       TextButton(
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: '$uid'))
-                                .then((_) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        'Kullanıcı ID\'si panoya kopyalandı!')),
-                              );
-                            });
-                          },
-                          child: Text(
-                            'Kullanıcı ID: $uid',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                          )),
-                      SizedBox(
-                        height: 8,
-                      ),
-                      Text(
-                        'Username: ${username ?? 'Bilinmiyor'}',
-                        style: TextStyle(color: Colors.white),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: '$uid'))
+                              .then((_) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                      'Kullanıcı ID\'si panoya kopyalandı!')),
+                            );
+                          });
+                        },
+                        child: Text(
+                          'Username: ${username ?? 'Bilinmiyor'}',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                       SizedBox(
                         height: 20,
