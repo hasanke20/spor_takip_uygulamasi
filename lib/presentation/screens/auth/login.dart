@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spor_takip_uygulamasi/repository/addToFirebase.dart';
-import 'package:toggle_switch/toggle_switch.dart';
 
 import '../home/assigner.dart';
 
@@ -128,7 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: Alignment.topCenter,
                       child: Padding(
                         padding: const EdgeInsets.only(top: 16.0),
-                        child: _buildToggleSwitch(),
                       ),
                     ),
                     Expanded(
@@ -285,29 +283,6 @@ class _LoginScreenState extends State<LoginScreen> {
       },
     );
   }*/
-
-  Widget _buildToggleSwitch() {
-    return ToggleSwitch(
-      minWidth: 90.0,
-      initialLabelIndex: _toggleIndex,
-      cornerRadius: 20.0,
-      activeFgColor: Colors.white,
-      inactiveBgColor: Colors.grey[900],
-      inactiveFgColor: Colors.white,
-      totalSwitches: 2,
-      labels: ['Giriş', 'Kayıt Ol'],
-      activeBgColors: [
-        [Colors.blueAccent],
-        [Colors.blueAccent]
-      ],
-      onToggle: (index) {
-        print('switched to: $index');
-        setState(() {
-          _toggleIndex = index ?? 0;
-        });
-      },
-    );
-  }
 }
 
 class SignInButtons extends StatelessWidget {
@@ -368,7 +343,7 @@ class SignInButtons extends StatelessWidget {
                 ),
                 SizedBox(width: 12),
                 Text(
-                  'Google ile Giriş Yap',
+                  'Google ile Devam Et',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -420,7 +395,7 @@ class SignInButtons extends StatelessWidget {
                 ),
                 SizedBox(width: 12),
                 Text(
-                  'Apple ile Giriş Yap',
+                  'Apple ile Devam Et',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,

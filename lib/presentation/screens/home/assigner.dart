@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/home.dart';
 import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/profil.dart';
 import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/programs/programs.dart';
@@ -96,7 +97,12 @@ class _AssignerState extends State<Assigner> {
                 ),
               ),
               TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
+                onPressed: () {
+                  final GoogleSignIn googleSignIn = GoogleSignIn();
+                  googleSignIn.signOut(); // Google oturumunu kapat
+                  googleSignIn.disconnect();
+                  Navigator.of(context).pop(true);
+                },
                 child: Text(
                   "Evet",
                   style: TextStyle(

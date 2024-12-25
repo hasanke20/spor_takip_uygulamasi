@@ -235,24 +235,46 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Hedef Döngü Düzenle'),
+          backgroundColor: Colors.grey[900], // Koyu tema arka plan rengi
+          title: Text(
+            'Hedef Döngü Düzenle',
+            style: TextStyle(color: Colors.white), // Başlık metin rengi
+          ),
           content: TextField(
             controller: targetCycleController,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: 'Yeni Hedef Döngü'),
+            decoration: InputDecoration(
+              labelText: 'Yeni Hedef Döngü',
+              labelStyle: TextStyle(color: Colors.white), // Etiket rengi
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white), // Alt çizgi rengi
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide:
+                    BorderSide(color: Colors.blueAccent), // Seçili çizgi rengi
+              ),
+            ),
+            style: TextStyle(color: Colors.white), // Metin rengi
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(null);
               },
-              child: Text('İptal'),
+              child: Text(
+                'İptal',
+                style: TextStyle(color: Colors.white), // "İptal" buton rengi
+              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(targetCycleController.text);
               },
-              child: Text('Kaydet'),
+              child: Text(
+                'Kaydet',
+                style:
+                    TextStyle(color: Colors.blueAccent), // "Kaydet" buton rengi
+              ),
             ),
           ],
         );
@@ -377,7 +399,20 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             decoration: InputDecoration(border: InputBorder.none),
             onSubmitted: (updatedValue) async {
               if (updatedValue.isNotEmpty) {
-                await exercise.reference.update({'target': updatedValue});
+                try {
+                  await exercise.reference
+                      .update({field: int.parse(updatedValue)});
+
+                  setState(() {});
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Güncelleme hatası: $e")),
+                  );
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Boş bir değer gönderilemez!")),
+                );
               }
             },
           ),
@@ -452,84 +487,22 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.grey[900],
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: hareketController,
-                decoration: InputDecoration(
-                  labelText: 'Hareket Adı',
-                  labelStyle: TextStyle(color: Colors.white),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-                style: TextStyle(color: Colors.white),
-              ),
-              TextField(
-                controller: setController,
-                decoration: InputDecoration(
-                  labelText: 'Set',
-                  labelStyle: TextStyle(color: Colors.white),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-                style: TextStyle(color: Colors.white),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: tekrarController,
-                decoration: InputDecoration(
-                  labelText: 'Tekrar',
-                  labelStyle: TextStyle(color: Colors.white),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-                style: TextStyle(color: Colors.white),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: agirlikController,
-                decoration: InputDecoration(
-                  labelText: 'Ağırlık',
-                  labelStyle: TextStyle(color: Colors.white),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-                style: TextStyle(color: Colors.white),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: donguKiloController,
-                decoration: InputDecoration(
-                  labelText: 'Döngü Kilo',
-                  labelStyle: TextStyle(color: Colors.white),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-                style: TextStyle(color: Colors.white),
-                keyboardType: TextInputType.number,
-              ),
-            ],
+          content: SingleChildScrollView(
+            // Eklenen kaydırma desteği
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildTextField(hareketController, 'Hareket Adı'),
+                _buildTextField(setController, 'Set',
+                    keyboardType: TextInputType.number),
+                _buildTextField(tekrarController, 'Tekrar',
+                    keyboardType: TextInputType.number),
+                _buildTextField(agirlikController, 'Ağırlık',
+                    keyboardType: TextInputType.number),
+                _buildTextField(donguKiloController, 'Döngü Kilo',
+                    keyboardType: TextInputType.number),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -538,23 +511,34 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               },
               child: Text(
                 'İptal',
-                style: TextStyle(color: Colors.white), // Buton yazı rengi
+                style: TextStyle(color: Colors.white),
               ),
             ),
             TextButton(
               onPressed: () async {
-                await exercise.reference.update({
-                  'hareketAdi': hareketController.text,
-                  'set': int.parse(setController.text),
-                  'tekrar': int.parse(tekrarController.text),
-                  'agirlik': int.parse(agirlikController.text),
-                  'donguKilo': int.parse(donguKiloController.text),
-                });
-                Navigator.of(context).pop();
+                try {
+                  await exercise.reference.update({
+                    'hareketAdi': hareketController.text,
+                    'set': int.parse(setController.text),
+                    'tekrar': int.parse(tekrarController.text),
+                    'agirlik': int.parse(agirlikController.text),
+                    'donguKilo': int.parse(donguKiloController.text),
+                  });
+
+                  Navigator.of(context).pop();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Egzersiz başarıyla güncellendi!")),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Güncelleme hatası: $e")),
+                  );
+                }
               },
               child: Text(
                 'Kaydet',
-                style: TextStyle(color: Colors.white), // Buton yazı rengi
+                style: TextStyle(color: Colors.blueAccent),
               ),
             ),
           ],
@@ -563,74 +547,176 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     );
   }
 
+  Widget _buildTextField(TextEditingController controller, String labelText,
+      {TextInputType? keyboardType}) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: labelText,
+        labelStyle: TextStyle(color: Colors.white),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.blueAccent),
+        ),
+      ),
+      style: TextStyle(color: Colors.white),
+    );
+  }
+
   void showAddExerciseDialog() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Egzersiz Ekle'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _hareketController,
-                decoration: InputDecoration(labelText: 'Hareket Adı'),
-              ),
-              TextField(
-                controller: _setController,
-                decoration: InputDecoration(labelText: 'Set'),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: _tekrarController,
-                decoration: InputDecoration(labelText: 'Tekrar'),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: _agirlikController,
-                decoration: InputDecoration(labelText: 'Ağırlık'),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: _donguController,
-                decoration: InputDecoration(labelText: 'Döngü Kilo'),
-                keyboardType: TextInputType.number,
-              ),
-            ],
+          backgroundColor: Colors.grey[900], // Koyu tema arka plan rengi
+          title: Text(
+            'Egzersiz Ekle',
+            style: TextStyle(color: Colors.white), // Başlık metin rengi
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _hareketController,
+                  decoration: InputDecoration(
+                    labelText: 'Hareket Adı',
+                    labelStyle: TextStyle(color: Colors.white), // Etiket rengi
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide:
+                          BorderSide(color: Colors.white), // Kenar çizgi
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide:
+                          BorderSide(color: Colors.white), // Seçili çizgi
+                    ),
+                  ),
+                  style: TextStyle(color: Colors.white), // Metin rengi
+                ),
+                TextField(
+                  controller: _setController,
+                  decoration: InputDecoration(
+                    labelText: 'Set',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: _tekrarController,
+                  decoration: InputDecoration(
+                    labelText: 'Tekrar',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: _agirlikController,
+                  decoration: InputDecoration(
+                    labelText: 'Ağırlık',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: _donguController,
+                  decoration: InputDecoration(
+                    labelText: 'Döngü Kilo',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('İptal'),
+              child: Text(
+                'İptal',
+                style: TextStyle(color: Colors.white), // Buton rengi kırmızı
+              ),
             ),
             TextButton(
               onPressed: () async {
                 if (_hareketController.text.isNotEmpty &&
                     _setController.text.isNotEmpty &&
                     _tekrarController.text.isNotEmpty &&
-                    _agirlikController.text.isNotEmpty) {
-                  await FirebaseFirestore.instance
-                      .collection(
-                          'Users/$uid/Programs/${widget.programId}/Exercises')
-                      .add({
-                    'hareketAdi': _hareketController.text,
-                    'set': int.parse(_setController.text),
-                    'tekrar': int.parse(_tekrarController.text),
-                    'agirlik': int.parse(_agirlikController.text),
-                    'donguKilo': int.parse(_donguController.text),
-                    'timestamp': FieldValue.serverTimestamp(),
-                  });
-                  _hareketController.clear();
-                  _setController.clear();
-                  _tekrarController.clear();
-                  _agirlikController.clear();
-                  _donguController.clear();
-                  Navigator.of(context).pop();
+                    _agirlikController.text.isNotEmpty &&
+                    _donguController.text.isNotEmpty) {
+                  try {
+                    await FirebaseFirestore.instance
+                        .collection(
+                            'Users/$uid/Programs/${widget.programId}/Exercises')
+                        .add({
+                      'hareketAdi': _hareketController.text,
+                      'set': int.parse(_setController.text),
+                      'tekrar': int.parse(_tekrarController.text),
+                      'agirlik': int.parse(_agirlikController.text),
+                      'donguKilo': int.parse(_donguController.text),
+                      'timestamp': FieldValue.serverTimestamp(),
+                    });
+
+                    // Metin alanlarını temizle
+                    _hareketController.clear();
+                    _setController.clear();
+                    _tekrarController.clear();
+                    _agirlikController.clear();
+                    _donguController.clear();
+
+                    // Dialog kapat
+                    Navigator.of(context).pop();
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Egzersiz başarıyla eklendi!")),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Hata oluştu: $e")),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Tüm alanları doldurun!")),
+                  );
                 }
               },
-              child: Text('Ekle'),
+              child: Text(
+                'Ekle',
+                style: TextStyle(color: Colors.blueAccent), // Buton rengi yeşil
+              ),
             ),
           ],
         );

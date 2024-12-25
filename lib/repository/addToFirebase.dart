@@ -632,3 +632,197 @@ Future<void> incrementCompletedCycles(String programId) async {
     print("completedCycle değeri artırıl: $error");
   }
 }
+
+class AccountDeletionManager {
+  void showDeletionForm(BuildContext context) {
+    final _reasonController = TextEditingController();
+    final _formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Kullanıcı dışarıya tıklayarak kapatamaz
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Hesap Silme Talebi"),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _reasonController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: "Hesabı silme nedeniniz",
+                  ),
+                  maxLines: 3,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Lütfen bir neden girin.";
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                    context); // Kullanıcı "İptal" derse dialog kapatılır
+              },
+              child: Text("İptal"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                print(_reasonController);
+                if (_formKey.currentState!.validate()) {
+                  Navigator.pop(context); // Formu kapat
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "Hesabınız 3 iş günü içerisinde silinecektir.",
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: Text("Gönder"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+/*
+  Future<void> sendEmail(String reason) async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
+    try {
+      String username = currentUser.email!;
+      String password = 'your-email-password';
+      final smtpServer = gmail(username, password);
+
+      final message = Message()
+        ..from = Address(username, 'Uygulama Hesap Silme')
+        ..recipients.add(recipientEmail) // Alıcı e-posta adresi
+        ..subject = 'Hesap Silme Talebi'
+        ..text = 'Kullanıcı, hesabını silmek istiyor. Sebep: $reason';
+
+      await send(message, smtpServer);
+      print("Mail başarıyla gönderildi.");
+    } catch (e) {
+      print("Mail gönderme hatası: $e");
+    }
+  }
+*/
+
+// Koyu temalı onaylama diyaloğu
+  Future<void> deleteUserAccount(BuildContext context) async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Kullanıcı oturum açmamış!")),
+        );
+        return;
+      }
+
+      // İlk onay
+      bool firstConfirmation = await showConfirmationDialog(
+        context,
+        title: "Emin misiniz?",
+        content: "Bu işlem hesabınızı siler. Devam etmek istiyor musunuz?",
+      );
+
+      if (!firstConfirmation) return;
+
+      // İkinci onay
+      bool secondConfirmation = await showConfirmationDialog(
+        context,
+        title: "Bu işlem geri alınamaz!",
+        content: "Hesabınızı silmek üzeresiniz. Gerçekten emin misiniz?",
+      );
+
+      if (!secondConfirmation) return;
+
+      // Kullanıcı onayladıktan sonra hesabı sil
+      await user.delete();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Hesabınız başarıyla silindi!")),
+      );
+
+      // Kullanıcıyı giriş ekranına yönlendirme
+      Navigator.pushReplacementNamed(
+          context, '/login'); // Örnek bir login sayfası
+    } catch (e) {
+      if (e is FirebaseAuthException && e.code == 'requires-recent-login') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text("Hesabı silmek için yeniden giriş yapmanız gerekiyor.")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Hata oluştu: $e")),
+        );
+      }
+    }
+  }
+
+// Koyu temalı onaylama diyaloğu
+  Future<bool> showConfirmationDialog(
+    BuildContext context, {
+    required String title,
+    required String content,
+  }) async {
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false, // Dışarı tıklanarak kapatılamaz
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Colors.black, // Koyu tema için siyah arka plan
+              title: Text(
+                title,
+                style: TextStyle(
+                  color: Colors.white, // Başlık için beyaz renk
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: Text(
+                content,
+                style: TextStyle(
+                  color: Colors.grey[300], // İçerik metni için açık gri renk
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(
+                    "Hayır",
+                    style: TextStyle(
+                      color:
+                          Colors.blueAccent, // Hayır butonu için kırmızı renk
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(
+                    "Evet",
+                    style: TextStyle(
+                      color: Colors.red[400], // Evet butonu için yeşil renk
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; // Kullanıcı iptal ederse false döner
+  }
+}

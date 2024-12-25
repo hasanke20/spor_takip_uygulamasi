@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:spor_takip_uygulamasi/repository/addToFirebase.dart';
 
 class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
@@ -63,6 +64,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final accountDeletionManager = AccountDeletionManager();
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -70,6 +72,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Spacer(),
               if (isLoading) CircularProgressIndicator(),
               if (!isLoading) ...[
                 Container(
@@ -97,7 +100,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                         },
                         child: Text(
                           'Username: ${username ?? 'Bilinmiyor'}',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
                       ),
                       SizedBox(
@@ -105,12 +108,26 @@ class _ProfilScreenState extends State<ProfilScreen> {
                       ),
                       Text(
                         'Email: ${email ?? 'Bilinmiyor'}',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ],
                   ),
                 ),
               ],
+              Spacer(),
+              TextButton(
+                onPressed: () {
+                  accountDeletionManager.deleteUserAccount(context);
+                },
+                style: TextButton.styleFrom(backgroundColor: Colors.red),
+                child: Text(
+                  'Hesabı Sil',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
             ],
           ),
         ),

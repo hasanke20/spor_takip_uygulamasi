@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/spor_takip_uygulamasi.iml" filepath="$PROJECT_DIR$/spor_takip_uygulamasi.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/spor_takip_uygulamasi_android.iml" filepath="$PROJECT_DIR$/android/spor_takip_uygulamasi_android.iml" />
     </modules>
   </component>
 </project>
