@@ -133,6 +133,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          _buildTextField(
+                              controller: _emailController, label: 'Email'),
+                          _buildPasswordField(),
+                          _buildActionButton(),
+                          SizedBox(
+                            height: 20,
+                          ),
                           SignInButtons(
                             rememberMe: _rememberMe,
                             saveUserCredentials: _saveUserCredentials,
@@ -167,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /*Widget _buildPasswordField() {
+  Widget _buildPasswordField() {
     return SizedBox(
       width: (MediaQuery.of(context).size.width * 3) / 5,
       child: TextFormField(
@@ -208,17 +215,15 @@ class _LoginScreenState extends State<LoginScreen> {
       width: (MediaQuery.of(context).size.width * 3) / 5,
       child: TextFormField(
         controller: controller,
-        style: TextStyle(color: Colors.white), // Metin rengi
+        style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white), // Etiket rengi
+          labelStyle: TextStyle(color: Colors.white),
           enabledBorder: UnderlineInputBorder(
-            borderSide:
-                BorderSide(color: Colors.grey), // Aktif olmayan kenar rengi
+            borderSide: BorderSide(color: Colors.grey),
           ),
           focusedBorder: UnderlineInputBorder(
-            borderSide:
-                BorderSide(color: Colors.blueAccent), // Aktif kenar rengi
+            borderSide: BorderSide(color: Colors.blueAccent),
           ),
         ),
         obscureText: obscureText,
@@ -227,62 +232,104 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildActionButton() {
-    return TextButton(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.blueAccent, // Buton rengi
-          borderRadius: BorderRadius.circular(20.0),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            _toggleIndex == 1 ? 'Kayıt Ol' : 'Giriş Yap',
-            style: TextStyle(
-              color: Colors.white, // Metin rengi
+    return Column(
+      children: [
+        if (_toggleIndex ==
+            1) // Sadece Kayıt Ol modunda kullanıcı adı alanını göster
+          _buildTextField(
+            controller: _userNameController,
+            label: 'Kullanıcı Adı',
+          ),
+        SizedBox(height: 8), // Kullanıcı adı ile diğer alanlar arasında boşluk
+        TextButton(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.blueAccent, // Buton rengi
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                _toggleIndex == 1 ? 'Kayıt Ol' : 'Giriş Yap',
+                style: TextStyle(
+                  color: Colors.white, // Metin rengi
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-      onPressed: () async {
-        if (_toggleIndex == 1) {
-          try {
-            await RegisterUser.registerNewUser(
-              context,
-              _userNameController.text,
-              _emailController.text,
-              _passwordController.text,
-            );
-            await Get.to(Assigner());
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content:
-                      Text('Kayıt sırasında bir hata oluştu: ${e.toString()}')),
-            );
-          }
-        } else {
-          try {
-            User? user = await LoginUser.login(
-              context,
-              _emailController.text,
-              _passwordController.text,
-            );
+          onPressed: () async {
+            if (_toggleIndex == 1) {
+              // Kayıt Ol
+              try {
+                if (_userNameController.text.isEmpty ||
+                    _emailController.text.isEmpty ||
+                    _passwordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lütfen tüm alanları doldurun')),
+                  );
+                  return;
+                }
+                await RegisterUser.registerNewUser(
+                  context,
+                  _userNameController.text,
+                  _emailController.text,
+                  _passwordController.text,
+                );
+                await Get.to(Assigner());
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(
+                          'Kayıt sırasında bir hata oluştu: ${e.toString()}')),
+                );
+              }
+            } else {
+              // Giriş Yap
+              try {
+                if (_emailController.text.isEmpty ||
+                    _passwordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lütfen tüm alanları doldurun')),
+                  );
+                  return;
+                }
+                User? user = await LoginUser.login(
+                  context,
+                  _emailController.text,
+                  _passwordController.text,
+                );
 
-            if (user != null) {
-              print('Kullanıcı ID: ${user.uid}');
-              await Get.to(Assigner());
+                if (user != null) {
+                  print('Kullanıcı ID: ${user.uid}');
+                  await Get.to(Assigner());
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(
+                          'Üye girişi sırasında bir hata oluştu: ${e.toString()}')),
+                );
+              }
             }
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text(
-                      'Üye girişi sırasında bir hata oluştu: ${e.toString()}')),
-            );
-          }
-        }
-      },
+          },
+        ),
+        SizedBox(height: 8), // Buton ile metin arasında boşluk
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _toggleIndex = _toggleIndex == 0 ? 1 : 0; // Giriş / Kayıt geçişi
+            });
+          },
+          child: Text(
+            _toggleIndex == 0
+                ? "Hesabın yok mu? Kayıt Ol"
+                : "Zaten hesabın var mı? Giriş Yap",
+            style: TextStyle(color: Colors.blueAccent),
+          ),
+        ),
+      ],
     );
-  }*/
+  }
 }
 
 class SignInButtons extends StatelessWidget {
