@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class EmptyScreen extends StatefulWidget {
   const EmptyScreen({super.key});
@@ -10,15 +10,19 @@ class EmptyScreen extends StatefulWidget {
 class _EmptyScreenState extends State<EmptyScreen> {
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Center(
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.black,
+      child: SafeArea(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 '!!!Coming Soon!!!',
-                style: TextStyle(fontSize: 30),
+                style: TextStyle(
+                  fontSize: 30,
+                  color: CupertinoColors.white,
+                ),
               ),
             ],
           ),

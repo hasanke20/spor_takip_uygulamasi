@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:spor_takip_uygulamasi/repository/addToFirebase.dart';
@@ -107,55 +108,58 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
     String programAdi = '';
     int targetCycle = 3;
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title:
-              Text('Yeni Program Ekle', style: TextStyle(color: Colors.white)),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  decoration: InputDecoration(
-                      labelText: 'Program Adı',
-                      labelStyle: TextStyle(color: Colors.white)),
+        return CupertinoAlertDialog(
+          title: Text('Yeni Program Ekle'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: CupertinoTextField(
+                  placeholder: 'Program Adı',
                   onChanged: (value) => programAdi = value,
-                  validator: (value) =>
-                      value!.isEmpty ? 'Bu alan boş olamaz.' : null,
-                  style: TextStyle(color: Colors.white),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: CupertinoColors.systemGrey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-                TextFormField(
-                  decoration: InputDecoration(
-                      labelText: 'Döngü',
-                      labelStyle: TextStyle(color: Colors.white)),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: CupertinoTextField(
+                  placeholder: 'Döngü',
                   keyboardType: TextInputType.number,
                   onChanged: (value) {
                     if (value.isNotEmpty) {
                       targetCycle = int.tryParse(value) ?? 3;
                     }
                   },
-                  validator: (value) =>
-                      value!.isEmpty ? 'Bu alan boş olamaz.' : null,
-                  style: TextStyle(color: Colors.white),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: CupertinoColors.systemGrey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           actions: [
-            TextButton(
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('İptal'),
+              isDefaultAction: true,
+            ),
+            CupertinoDialogAction(
               onPressed: () {
-                if (_formKey.currentState!.validate()) {
+                if (programAdi.isNotEmpty) {
                   AddProgram.addProgram(context,
                       programAdi: programAdi, targetCycle: targetCycle);
                   Navigator.of(context).pop();
                 }
               },
-              child: Text('Ekle',
-                  style: TextStyle(color: Colors.blue)), // Metin rengi
+              child: Text('Ekle'),
             ),
           ],
         );
@@ -167,30 +171,31 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
     final _formKey = GlobalKey<FormState>();
     String programAdi = doc['programAdi'];
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title:
-              Text('Programı Düzenle', style: TextStyle(color: Colors.white)),
-          content: Form(
-            key: _formKey,
-            child: TextFormField(
-              decoration: InputDecoration(
-                  labelText: 'Program Adı',
-                  labelStyle: TextStyle(color: Colors.white)),
-              initialValue: programAdi,
+        return CupertinoAlertDialog(
+          title: Text('Programı Düzenle'),
+          content: Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: CupertinoTextField(
+              placeholder: 'Program Adı',
               onChanged: (value) => programAdi = value,
-              validator: (value) =>
-                  value!.isEmpty ? 'Bu alan boş olamaz.' : null,
-              style: TextStyle(color: Colors.white),
+              decoration: BoxDecoration(
+                border: Border.all(color: CupertinoColors.systemGrey),
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
           actions: [
-            TextButton(
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('İptal'),
+              isDefaultAction: true,
+            ),
+            CupertinoDialogAction(
               onPressed: () {
-                if (_formKey.currentState!.validate()) {
+                if (programAdi.isNotEmpty) {
                   FirebaseFirestore.instance
                       .collection(
                           'Users/${FirebaseAuth.instance.currentUser?.uid}/Programs')
@@ -211,7 +216,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                   });
                 }
               },
-              child: Text('Güncelle', style: TextStyle(color: Colors.blue)),
+              child: Text('Güncelle'),
             ),
           ],
         );
@@ -244,29 +249,31 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
     String? receiverId;
     String? uid = FirebaseAuth.instance.currentUser?.uid;
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: Text('Programı Paylaş', style: TextStyle(color: Colors.white)),
-          content: Form(
-            child: TextFormField(
-              decoration: InputDecoration(
-                labelText: "Alıcının Kullanıcı ID'si",
-                labelStyle: TextStyle(color: Colors.white),
-              ),
-              initialValue: receiverId?.toString(),
+        return CupertinoAlertDialog(
+          title: Text('Programı Paylaş'),
+          content: Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: CupertinoTextField(
+              placeholder: "Alıcının Kullanıcı ID'si",
               onChanged: (value) {
                 receiverId = value;
               },
-              validator: (value) =>
-                  value!.isEmpty ? 'Bu alan boş olamaz.' : null,
-              style: TextStyle(color: Colors.white),
+              decoration: BoxDecoration(
+                border: Border.all(color: CupertinoColors.systemGrey),
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
           actions: [
-            TextButton(
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('İptal'),
+              isDefaultAction: true,
+            ),
+            CupertinoDialogAction(
               onPressed: () async {
                 if (receiverId != null &&
                     await isUserExists(receiverId.toString()) == true) {
@@ -276,13 +283,14 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                     senderId: uid.toString(),
                     receiverId: receiverId!.toString(),
                   );
+                  Navigator.of(context).pop();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text('Geçerli bir Kullanıcı ID girin!'),
                   ));
                 }
               },
-              child: Text('Paylaş', style: TextStyle(color: Colors.blue)),
+              child: Text('Paylaş'),
             ),
           ],
         );
@@ -291,38 +299,26 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
   }
 
   Future<void> _confirmDelete(BuildContext context, String programId) async {
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900], // Dialog arka plan rengi
-          title: Text('Bu programı silmek istediğinize emin misiniz?',
-              style: TextStyle(color: Colors.white)), // Metin rengi
+        return CupertinoAlertDialog(
+          title: Text('Bu programı silmek istediğinize emin misiniz?'),
           actions: [
-            TextButton(
+            CupertinoDialogAction(
               onPressed: () {
-                Navigator.of(context).pop(); // İptal et
+                Navigator.of(context).pop();
               },
-              child: Text(
-                'Hayır',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white, // Metin rengi
-                ),
-              ),
+              child: Text('Hayır'),
+              isDefaultAction: true,
             ),
-            TextButton(
+            CupertinoDialogAction(
               onPressed: () async {
                 await _deleteProgram(programId);
                 Navigator.of(context).pop();
               },
-              child: Text(
-                'Evet',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.red, // Metin rengi
-                ),
-              ),
+              child: Text('Evet'),
+              isDestructiveAction: true,
             ),
           ],
         );

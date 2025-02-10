@@ -1,34 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spor_takip_uygulamasi/repository/addToFirebase.dart';
 
-import '../home/assigner.dart';
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      initialRoute: '/',
-      getPages: [
-        GetPage(
-          name: '/',
-          page: () => LoginScreen(),
-        ),
-      ],
-      title: 'Spor Takip Uygulaması',
-    );
-  }
-}
+import '../home/index.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -86,7 +63,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (user != null) {
         await _saveUserCredentials(); // Oturum bilgilerini kaydet
-        Get.to(Assigner());
+        Navigator.of(context).pushReplacement(
+            CupertinoPageRoute(builder: (context) => IndexApp()));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -101,23 +79,23 @@ class _LoginScreenState extends State<LoginScreen> {
       future: _initialization,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            backgroundColor: Colors.black,
-            body: Center(child: CircularProgressIndicator()),
+          return CupertinoPageScaffold(
+            backgroundColor: CupertinoColors.black,
+            child: Center(child: CupertinoActivityIndicator()),
           );
         } else if (snapshot.hasError) {
-          return Scaffold(
-            backgroundColor: Colors.black,
-            body: Center(
+          return CupertinoPageScaffold(
+            backgroundColor: CupertinoColors.black,
+            child: Center(
                 child: Text('Hata: Firebase başlatılamadı!',
-                    style: TextStyle(color: Colors.red))),
+                    style: TextStyle(color: CupertinoColors.destructiveRed))),
           );
         }
 
-        return SafeArea(
-          child: Scaffold(
-            backgroundColor: Colors.black, // Arka plan rengi
-            body: Center(
+        return CupertinoPageScaffold(
+          backgroundColor: CupertinoColors.black,
+          child: SafeArea(
+            child: Center(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -137,9 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               controller: _emailController, label: 'Email'),
                           _buildPasswordField(),
                           _buildActionButton(),
-                          SizedBox(
-                            height: 20,
-                          ),
+                          SizedBox(height: 20),
                           SignInButtons(
                             rememberMe: _rememberMe,
                             saveUserCredentials: _saveUserCredentials,
@@ -147,17 +123,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Checkbox(
+                              CupertinoSwitch(
                                 value: _rememberMe,
                                 onChanged: (value) {
                                   setState(() {
-                                    _rememberMe = value!;
+                                    _rememberMe = value;
                                   });
                                 },
                               ),
+                              SizedBox(width: 8),
                               Text(
                                 "Beni Hatırla",
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(color: CupertinoColors.white),
                               ),
                             ],
                           ),
@@ -177,29 +154,30 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildPasswordField() {
     return SizedBox(
       width: (MediaQuery.of(context).size.width * 3) / 5,
-      child: TextFormField(
+      child: CupertinoTextField(
         controller: _passwordController,
-        style: TextStyle(color: Colors.white), // Metin rengi
-        decoration: InputDecoration(
-          labelText: 'Şifre',
-          labelStyle: TextStyle(color: Colors.white), // Etiket rengi
-          suffixIcon: IconButton(
-            icon: Icon(
-              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-              color: Colors.white, // Suffix ikon rengi
+        style: TextStyle(color: CupertinoColors.white),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: CupertinoColors.systemGrey,
+              width: 1.0,
             ),
-            onPressed: () {
-              setState(() {
-                _isPasswordVisible = !_isPasswordVisible;
-              });
-            },
           ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.grey),
+        ),
+        placeholder: 'Şifre',
+        placeholderStyle: TextStyle(color: CupertinoColors.systemGrey),
+        suffix: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: Icon(
+            _isPasswordVisible ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
+            color: CupertinoColors.white,
           ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.blueAccent),
-          ),
+          onPressed: () {
+            setState(() {
+              _isPasswordVisible = !_isPasswordVisible;
+            });
+          },
         ),
         obscureText: !_isPasswordVisible,
       ),
@@ -213,19 +191,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return SizedBox(
       width: (MediaQuery.of(context).size.width * 3) / 5,
-      child: TextFormField(
+      child: CupertinoTextField(
         controller: controller,
-        style: TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.white),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.grey),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.blueAccent),
+        style: TextStyle(color: CupertinoColors.white),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: CupertinoColors.systemGrey,
+              width: 1.0,
+            ),
           ),
         ),
+        placeholder: label,
+        placeholderStyle: TextStyle(color: CupertinoColors.systemGrey),
         obscureText: obscureText,
       ),
     );
@@ -234,28 +212,18 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildActionButton() {
     return Column(
       children: [
-        if (_toggleIndex ==
-            1) // Sadece Kayıt Ol modunda kullanıcı adı alanını göster
+        if (_toggleIndex == 1)
           _buildTextField(
             controller: _userNameController,
             label: 'Kullanıcı Adı',
           ),
-        SizedBox(height: 8), // Kullanıcı adı ile diğer alanlar arasında boşluk
-        TextButton(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blueAccent, // Buton rengi
-              borderRadius: BorderRadius.circular(20.0),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                _toggleIndex == 1 ? 'Kayıt Ol' : 'Giriş Yap',
-                style: TextStyle(
-                  color: Colors.white, // Metin rengi
-                ),
-              ),
-            ),
+        SizedBox(height: 8),
+        CupertinoButton(
+          color: CupertinoColors.activeBlue,
+          borderRadius: BorderRadius.circular(20.0),
+          child: Text(
+            _toggleIndex == 1 ? 'Kayıt Ol' : 'Giriş Yap',
+            style: TextStyle(color: CupertinoColors.white),
           ),
           onPressed: () async {
             if (_toggleIndex == 1) {
@@ -275,7 +243,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   _emailController.text,
                   _passwordController.text,
                 );
-                await Get.to(Assigner());
+                Navigator.of(context).pushReplacement(
+                    CupertinoPageRoute(builder: (context) => IndexApp()));
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -301,7 +270,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 if (user != null) {
                   print('Kullanıcı ID: ${user.uid}');
-                  await Get.to(Assigner());
+                  await Navigator.of(context).pushReplacement(
+                      CupertinoPageRoute(builder: (context) => IndexApp()));
                 }
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -313,19 +283,20 @@ class _LoginScreenState extends State<LoginScreen> {
             }
           },
         ),
-        SizedBox(height: 8), // Buton ile metin arasında boşluk
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              _toggleIndex = _toggleIndex == 0 ? 1 : 0; // Giriş / Kayıt geçişi
-            });
-          },
+        SizedBox(height: 8),
+        CupertinoButton(
+          padding: EdgeInsets.zero,
           child: Text(
             _toggleIndex == 0
                 ? "Hesabın yok mu? Kayıt Ol"
                 : "Zaten hesabın var mı? Giriş Yap",
-            style: TextStyle(color: Colors.blueAccent),
+            style: TextStyle(color: CupertinoColors.activeBlue),
           ),
+          onPressed: () {
+            setState(() {
+              _toggleIndex = _toggleIndex == 0 ? 1 : 0;
+            });
+          },
         ),
       ],
     );
@@ -347,8 +318,9 @@ class SignInButtons extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // Google ile Giriş Yap Butonu
-        GestureDetector(
-          onTap: () async {
+        CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () async {
             bool isSuccess = await SignInWithGoogle.signIn(
               context,
               rememberMe: rememberMe,
@@ -357,7 +329,8 @@ class SignInButtons extends StatelessWidget {
               if (rememberMe) {
                 await saveUserCredentials();
               }
-              Get.to(Assigner());
+              Navigator.of(context).pushReplacement(
+                  CupertinoPageRoute(builder: (context) => IndexApp()));
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -403,8 +376,9 @@ class SignInButtons extends StatelessWidget {
         ),
         SizedBox(height: 16), // Butonlar arasında boşluk
         // Apple ile Giriş Yap Butonu
-        GestureDetector(
-          onTap: () async {
+        CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () async {
             bool isSuccess = await AppleSignInService.signIn(context);
             if (isSuccess) {
               // Başarılı giriş sonrası yönlendirme

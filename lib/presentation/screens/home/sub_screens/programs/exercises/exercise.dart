@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/programs/activeprogram/activeprogram.dart';
 
 class ExerciseScreen extends StatefulWidget {
@@ -87,140 +86,158 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: GestureDetector(
-        onTap: () {},
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          appBar: AppBar(
-            leading: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: Icon(Icons.arrow_back, color: Colors.white),
-            ),
-            backgroundColor: Colors.black,
-            title: FutureBuilder<String>(
-              future: programAdi(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return Text('Hata: ${snapshot.error}',
-                      style: TextStyle(color: Colors.red));
-                } else if (snapshot.hasData) {
-                  return Text(
-                    snapshot.data ?? 'Program Adı Yok',
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  );
-                } else {
-                  return Text('Program adı alınamadı');
-                }
-              },
-            ),
-          ),
-          body: isDataLoaded
-              ? Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          buildCycleField(context, _completedCycle,
-                              'Tamamlanan', Colors.white),
-                          Row(
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.black,
+      navigationBar: CupertinoNavigationBar(
+        backgroundColor: CupertinoColors.black,
+        leading: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Icon(CupertinoIcons.back, color: CupertinoColors.white),
+        ),
+        middle: FutureBuilder<String>(
+          future: programAdi(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return CupertinoActivityIndicator();
+            } else if (snapshot.hasError) {
+              return Text('Hata: ${snapshot.error}',
+                  style: TextStyle(color: CupertinoColors.destructiveRed));
+            } else if (snapshot.hasData) {
+              return Text(
+                snapshot.data ?? 'Program Adı Yok',
+                style: TextStyle(
+                  color: CupertinoColors.white,
+                ),
+              );
+            } else {
+              return Text('Program adı alınamadı');
+            }
+          },
+        ),
+      ),
+      child: SafeArea(
+        child: GestureDetector(
+          onTap: () {},
+          child: Stack(
+            children: [
+              isDataLoaded
+                  ? Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              IconButton(
-                                icon: Icon(Icons.edit, color: Colors.white),
-                                onPressed: () async {
-                                  String? newTargetCycle =
-                                      await _showEditTargetCycleDialog();
-                                  if (newTargetCycle != null &&
-                                      newTargetCycle.isNotEmpty) {
-                                    await FirebaseFirestore.instance
-                                        .collection(
-                                            'Users/$uid/Programs/${widget.programId}/Dongu')
-                                        .doc('cycle')
-                                        .update({
-                                      'targetCycle': int.parse(newTargetCycle),
-                                    });
-                                    // Fetch the updated cycles
-                                    await _fetchCycles();
-                                  }
-                                },
+                              buildCycleField(context, _completedCycle,
+                                  'Tamamlanan', CupertinoColors.white),
+                              Row(
+                                children: [
+                                  CupertinoButton(
+                                    padding: EdgeInsets.zero,
+                                    child: Icon(CupertinoIcons.pencil,
+                                        color: CupertinoColors.white),
+                                    onPressed: () async {
+                                      String? newTargetCycle =
+                                          await _showEditTargetCycleDialog();
+                                      if (newTargetCycle != null &&
+                                          newTargetCycle.isNotEmpty) {
+                                        await FirebaseFirestore.instance
+                                            .collection(
+                                                'Users/$uid/Programs/${widget.programId}/Dongu')
+                                            .doc('cycle')
+                                            .update({
+                                          'targetCycle':
+                                              int.parse(newTargetCycle),
+                                        });
+                                        await _fetchCycles();
+                                      }
+                                    },
+                                  ),
+                                  buildCycleField(context, _targetCycle,
+                                      'Hedef', CupertinoColors.white),
+                                ],
                               ),
-                              buildCycleField(
-                                  context, _targetCycle, 'Hedef', Colors.white),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection(
-                                'Users/$uid/Programs/${widget.programId}/Exercises')
-                            .orderBy('timestamp', descending: false)
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasError) {
-                            return Center(
-                              child: Text('Bir hata oluştu!',
-                                  style: TextStyle(color: Colors.white)),
-                            );
-                          }
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Center(child: CircularProgressIndicator());
-                          }
-                          if (!snapshot.hasData ||
-                              snapshot.data!.docs.isEmpty) {
-                            return Center(
-                                child: Text('Egzersiz yok.',
-                                    style: TextStyle(color: Colors.white)));
-                          }
+                        ),
+                        Expanded(
+                          child: StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection(
+                                    'Users/$uid/Programs/${widget.programId}/Exercises')
+                                .orderBy('timestamp', descending: false)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasError) {
+                                return Center(
+                                  child: Text('Bir hata oluştu!',
+                                      style: TextStyle(
+                                          color: CupertinoColors.white)),
+                                );
+                              }
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                    child: CupertinoActivityIndicator());
+                              }
+                              if (!snapshot.hasData ||
+                                  snapshot.data!.docs.isEmpty) {
+                                return Center(
+                                    child: Text('Egzersiz yok.',
+                                        style: TextStyle(
+                                            color: CupertinoColors.white)));
+                              }
 
-                          final exerciseData = snapshot.data!.docs;
+                              final exerciseData = snapshot.data!.docs;
 
-                          return ListView.builder(
-                            itemCount: exerciseData.length,
-                            itemBuilder: (context, index) {
-                              var exercise = exerciseData[index];
-                              return buildExerciseCard(context, exercise);
+                              return ListView.builder(
+                                itemCount: exerciseData.length,
+                                itemBuilder: (context, index) {
+                                  var exercise = exerciseData[index];
+                                  return buildExerciseCard(context, exercise);
+                                },
+                              );
                             },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                )
-              : Center(child: CircularProgressIndicator()),
-          floatingActionButton: FloatingActionButton(
-            onPressed: showAddExerciseDialog,
-            child: Icon(Icons.add, color: Colors.black),
-            backgroundColor: Colors.blueAccent,
-          ),
-          bottomNavigationBar: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Container(
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () async {
-                  await Get.to(
-                      () => ActiveProgram(programId: widget.programId));
-                  print("merhabaaaa");
-                  setState(() {});
-                  await _fetchCycles();
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-                child: Text('Programı Başlat',
-                    style: TextStyle(fontSize: 20, color: Colors.black)),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Center(child: CupertinoActivityIndicator()),
+              Positioned(
+                right: 16,
+                bottom: 80,
+                child: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  color: CupertinoColors.activeBlue,
+                  child: Icon(CupertinoIcons.add, color: CupertinoColors.black),
+                  onPressed: showAddExerciseDialog,
+                ),
               ),
-            ),
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: SizedBox(
+                  height: 50,
+                  child: CupertinoButton.filled(
+                    onPressed: () async {
+                      Navigator.of(context).push(CupertinoPageRoute(
+                          builder: (context) =>
+                              ActiveProgram(programId: widget.programId)));
+                      print("merhabaaaa");
+                      setState(() {});
+                      await _fetchCycles();
+                    },
+                    child: Text('Programı Başlat',
+                        style: TextStyle(
+                            fontSize: 20, color: CupertinoColors.black)),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -230,145 +247,137 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
   Future<String?> _showEditTargetCycleDialog() async {
     TextEditingController targetCycleController =
         TextEditingController(text: _targetCycle.toString());
+    String? result;
 
-    return await showDialog<String>(
+    await showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900], // Koyu tema arka plan rengi
-          title: Text(
-            'Hedef Döngü Düzenle',
-            style: TextStyle(color: Colors.white), // Başlık metin rengi
-          ),
-          content: TextField(
+        return CupertinoAlertDialog(
+          title: Text('Hedef Döngü Düzenle'),
+          content: CupertinoTextField(
             controller: targetCycleController,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'Yeni Hedef Döngü',
-              labelStyle: TextStyle(color: Colors.white), // Etiket rengi
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white), // Alt çizgi rengi
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide:
-                    BorderSide(color: Colors.blueAccent), // Seçili çizgi rengi
-              ),
-            ),
-            style: TextStyle(color: Colors.white), // Metin rengi
+            placeholder: 'Yeni Hedef Döngü',
           ),
           actions: [
-            TextButton(
+            CupertinoDialogAction(
               onPressed: () {
-                Navigator.of(context).pop(null);
+                Navigator.of(context).pop();
               },
-              child: Text(
-                'İptal',
-                style: TextStyle(color: Colors.white), // "İptal" buton rengi
-              ),
+              child: Text('İptal'),
+              isDestructiveAction: true,
             ),
-            TextButton(
+            CupertinoDialogAction(
               onPressed: () {
-                Navigator.of(context).pop(targetCycleController.text);
+                result = targetCycleController.text;
+                Navigator.of(context).pop();
               },
-              child: Text(
-                'Kaydet',
-                style:
-                    TextStyle(color: Colors.blueAccent), // "Kaydet" buton rengi
-              ),
+              child: Text('Kaydet'),
             ),
           ],
         );
       },
     );
+
+    return result;
   }
 
   Widget buildExerciseCard(BuildContext context, DocumentSnapshot exercise) {
     final TextEditingController _donguKiloController = TextEditingController();
-
     final donguKilo = exercise['donguKilo'] ?? 0;
 
-    return Card(
+    return Container(
       margin: EdgeInsets.all(10),
-      elevation: 5,
-      color: Colors.grey[900],
-      child: ListTile(
-        title: Row(
+      decoration: BoxDecoration(
+        color: CupertinoColors.darkBackgroundGray,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(10),
+        child: Column(
           children: [
-            Expanded(
-              child: Text(
-                'Hareket: ${exercise['hareketAdi']}',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
-            ),
-            SizedBox(width: 10),
-            IconButton(
-              icon: Icon(Icons.edit, color: Colors.white),
-              onPressed: () {
-                _editExercise(context, exercise);
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.delete, color: Colors.white),
-              onPressed: () => _showDeleteConfirmation(context, exercise),
-            ),
-          ],
-        ),
-        subtitle: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            buildEditableField(
-                context, exercise, exercise.id, 'set', Colors.grey.shade400),
-            SizedBox(width: 5),
-            Text('x', style: TextStyle(color: Colors.white, fontSize: 30)),
-            SizedBox(width: 10),
-            buildEditableField(
-                context, exercise, exercise.id, 'tekrar', Colors.grey.shade400),
-            SizedBox(width: 10),
-            buildEditableField(
-                context, exercise, exercise.id, 'agirlik', Colors.white),
-            SizedBox(width: 10),
-            Text('kg', style: TextStyle(color: Colors.white, fontSize: 30)),
-            SizedBox(width: 10),
             Row(
               children: [
-                Icon(
-                  Icons.loop,
-                  color: Colors.grey,
+                Expanded(
+                  child: Text(
+                    'Hareket: ${exercise['hareketAdi']}',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.white),
+                  ),
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade700,
-                    borderRadius: BorderRadius.all(Radius.circular(20)),
-                  ),
-                  width: 50,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child: TextField(
-                      controller: _donguKiloController,
-                      style: TextStyle(color: Colors.white, fontSize: 30),
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        hintText: donguKilo.toString(),
-                        hintStyle: TextStyle(color: Colors.grey, fontSize: 30),
-                        border: InputBorder.none,
-                      ),
-                      onSubmitted: (value) async {
-                        if (value.isNotEmpty) {
-                          // Yeni donguKilo değerini kaydetme
-                          await exercise.reference.update({
-                            'donguKilo': int.parse(_donguKiloController.text),
-                          });
-
-                          // Ekranı güncelleme
-                          setState(() {});
-                        }
-                      },
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child:
+                      Icon(CupertinoIcons.pencil, color: CupertinoColors.white),
+                  onPressed: () {
+                    _editExercise(context, exercise);
+                  },
+                ),
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child:
+                      Icon(CupertinoIcons.delete, color: CupertinoColors.white),
+                  onPressed: () => _showDeleteConfirmation(context, exercise),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                buildEditableField(context, exercise, exercise.id, 'set',
+                    CupertinoColors.systemGrey),
+                SizedBox(width: 5),
+                Text('x',
+                    style:
+                        TextStyle(color: CupertinoColors.white, fontSize: 30)),
+                SizedBox(width: 10),
+                buildEditableField(context, exercise, exercise.id, 'tekrar',
+                    CupertinoColors.systemGrey),
+                SizedBox(width: 10),
+                buildEditableField(context, exercise, exercise.id, 'agirlik',
+                    CupertinoColors.white),
+                SizedBox(width: 10),
+                Text('kg',
+                    style:
+                        TextStyle(color: CupertinoColors.white, fontSize: 30)),
+                SizedBox(width: 10),
+                Row(
+                  children: [
+                    Icon(
+                      CupertinoIcons.loop,
+                      color: CupertinoColors.systemGrey,
                     ),
-                  ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.systemGrey6,
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                      ),
+                      width: 50,
+                      child: CupertinoTextField(
+                        controller: _donguKiloController,
+                        style: TextStyle(
+                            color: CupertinoColors.white, fontSize: 30),
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        placeholder: donguKilo.toString(),
+                        placeholderStyle: TextStyle(
+                            color: CupertinoColors.systemGrey, fontSize: 30),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        onSubmitted: (value) async {
+                          if (value.isNotEmpty) {
+                            await exercise.reference.update({
+                              'donguKilo': int.parse(_donguKiloController.text),
+                            });
+                            setState(() {});
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -386,36 +395,54 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
       flex: 2,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.grey.shade700,
+          color: CupertinoColors.systemGrey6,
           borderRadius: BorderRadius.all(Radius.circular(20)),
         ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4),
-          child: TextField(
-            textAlign: TextAlign.center,
-            controller: controller,
-            keyboardType: TextInputType.number,
-            style: TextStyle(fontSize: 30, color: color),
-            decoration: InputDecoration(border: InputBorder.none),
-            onSubmitted: (updatedValue) async {
-              if (updatedValue.isNotEmpty) {
-                try {
-                  await exercise.reference
-                      .update({field: int.parse(updatedValue)});
-
-                  setState(() {});
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Güncelleme hatası: $e")),
-                  );
-                }
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Boş bir değer gönderilemez!")),
+        child: CupertinoTextField(
+          textAlign: TextAlign.center,
+          controller: controller,
+          keyboardType: TextInputType.number,
+          style: TextStyle(fontSize: 30, color: color),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          onSubmitted: (updatedValue) async {
+            if (updatedValue.isNotEmpty) {
+              try {
+                await exercise.reference
+                    .update({field: int.parse(updatedValue)});
+                setState(() {});
+              } catch (e) {
+                showCupertinoDialog(
+                  context: context,
+                  builder: (context) => CupertinoAlertDialog(
+                    title: Text("Hata"),
+                    content: Text("Güncelleme hatası: $e"),
+                    actions: [
+                      CupertinoDialogAction(
+                        child: Text("Tamam"),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
                 );
               }
-            },
-          ),
+            } else {
+              showCupertinoDialog(
+                context: context,
+                builder: (context) => CupertinoAlertDialog(
+                  title: Text("Hata"),
+                  content: Text("Boş bir değer gönderilemez!"),
+                  actions: [
+                    CupertinoDialogAction(
+                      child: Text("Tamam"),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
         ),
       ),
     );
@@ -440,20 +467,21 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
   void _showDeleteConfirmation(
       BuildContext context, DocumentSnapshot exercise) {
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return CupertinoAlertDialog(
           title: Text('Silmek istediğinize emin misiniz?'),
           content: Text('Bu egzersizi silmek için onaylayın.'),
           actions: [
-            TextButton(
+            CupertinoDialogAction(
               child: Text('İptal'),
+              isDestructiveAction: true,
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(
+            CupertinoDialogAction(
               child: Text('Sil'),
               onPressed: () async {
                 await exercise.reference.delete();
@@ -478,43 +506,55 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     final TextEditingController donguKiloController =
         TextEditingController(text: exercise['donguKilo'].toString());
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Egzersizi Düzenle',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.grey[900],
-          content: SingleChildScrollView(
-            // Eklenen kaydırma desteği
+        return CupertinoAlertDialog(
+          title: Text('Egzersizi Düzenle'),
+          content: Container(
+            height: 300,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                _buildTextField(hareketController, 'Hareket Adı'),
-                _buildTextField(setController, 'Set',
-                    keyboardType: TextInputType.number),
-                _buildTextField(tekrarController, 'Tekrar',
-                    keyboardType: TextInputType.number),
-                _buildTextField(agirlikController, 'Ağırlık',
-                    keyboardType: TextInputType.number),
-                _buildTextField(donguKiloController, 'Döngü Kilo',
-                    keyboardType: TextInputType.number),
+                CupertinoTextField(
+                  controller: hareketController,
+                  placeholder: 'Hareket Adı',
+                ),
+                SizedBox(height: 10),
+                CupertinoTextField(
+                  controller: setController,
+                  placeholder: 'Set',
+                  keyboardType: TextInputType.number,
+                ),
+                SizedBox(height: 10),
+                CupertinoTextField(
+                  controller: tekrarController,
+                  placeholder: 'Tekrar',
+                  keyboardType: TextInputType.number,
+                ),
+                SizedBox(height: 10),
+                CupertinoTextField(
+                  controller: agirlikController,
+                  placeholder: 'Ağırlık',
+                  keyboardType: TextInputType.number,
+                ),
+                SizedBox(height: 10),
+                CupertinoTextField(
+                  controller: donguKiloController,
+                  placeholder: 'Döngü Kilo',
+                  keyboardType: TextInputType.number,
+                ),
               ],
             ),
           ),
           actions: [
-            TextButton(
+            CupertinoDialogAction(
+              isDestructiveAction: true,
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text(
-                'İptal',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: Text('İptal'),
             ),
-            TextButton(
+            CupertinoDialogAction(
               onPressed: () async {
                 try {
                   await exercise.reference.update({
@@ -527,19 +567,36 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
                   Navigator.of(context).pop();
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Egzersiz başarıyla güncellendi!")),
+                  showCupertinoDialog(
+                    context: context,
+                    builder: (context) => CupertinoAlertDialog(
+                      title: Text("Başarılı"),
+                      content: Text("Egzersiz başarıyla güncellendi!"),
+                      actions: [
+                        CupertinoDialogAction(
+                          child: Text("Tamam"),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
                   );
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Güncelleme hatası: $e")),
+                  showCupertinoDialog(
+                    context: context,
+                    builder: (context) => CupertinoAlertDialog(
+                      title: Text("Hata"),
+                      content: Text("Güncelleme hatası: $e"),
+                      actions: [
+                        CupertinoDialogAction(
+                          child: Text("Tamam"),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
                   );
                 }
               },
-              child: Text(
-                'Kaydet',
-                style: TextStyle(color: Colors.blueAccent),
-              ),
+              child: Text('Kaydet'),
             ),
           ],
         );
@@ -547,129 +604,56 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String labelText,
-      {TextInputType? keyboardType}) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: TextStyle(color: Colors.white),
-        enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.white),
-        ),
-        focusedBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.blueAccent),
-        ),
-      ),
-      style: TextStyle(color: Colors.white),
-    );
-  }
-
   void showAddExerciseDialog() {
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900], // Koyu tema arka plan rengi
-          title: Text(
-            'Egzersiz Ekle',
-            style: TextStyle(color: Colors.white), // Başlık metin rengi
-          ),
-          content: SingleChildScrollView(
+        return CupertinoAlertDialog(
+          title: Text('Egzersiz Ekle'),
+          content: Container(
+            height: 300,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
+                CupertinoTextField(
                   controller: _hareketController,
-                  decoration: InputDecoration(
-                    labelText: 'Hareket Adı',
-                    labelStyle: TextStyle(color: Colors.white), // Etiket rengi
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Colors.white), // Kenar çizgi
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Colors.white), // Seçili çizgi
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.white), // Metin rengi
+                  placeholder: 'Hareket Adı',
                 ),
-                TextField(
+                SizedBox(height: 10),
+                CupertinoTextField(
                   controller: _setController,
-                  decoration: InputDecoration(
-                    labelText: 'Set',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.white),
+                  placeholder: 'Set',
                   keyboardType: TextInputType.number,
                 ),
-                TextField(
+                SizedBox(height: 10),
+                CupertinoTextField(
                   controller: _tekrarController,
-                  decoration: InputDecoration(
-                    labelText: 'Tekrar',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.white),
+                  placeholder: 'Tekrar',
                   keyboardType: TextInputType.number,
                 ),
-                TextField(
+                SizedBox(height: 10),
+                CupertinoTextField(
                   controller: _agirlikController,
-                  decoration: InputDecoration(
-                    labelText: 'Ağırlık',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.white),
+                  placeholder: 'Ağırlık',
                   keyboardType: TextInputType.number,
                 ),
-                TextField(
+                SizedBox(height: 10),
+                CupertinoTextField(
                   controller: _donguController,
-                  decoration: InputDecoration(
-                    labelText: 'Döngü Kilo',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.white),
+                  placeholder: 'Döngü Kilo',
                   keyboardType: TextInputType.number,
                 ),
               ],
             ),
           ),
           actions: [
-            TextButton(
+            CupertinoDialogAction(
+              isDestructiveAction: true,
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text(
-                'İptal',
-                style: TextStyle(color: Colors.white), // Buton rengi kırmızı
-              ),
+              child: Text('İptal'),
             ),
-            TextButton(
+            CupertinoDialogAction(
               onPressed: () async {
                 if (_hareketController.text.isNotEmpty &&
                     _setController.text.isNotEmpty &&
@@ -689,34 +673,59 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       'timestamp': FieldValue.serverTimestamp(),
                     });
 
-                    // Metin alanlarını temizle
                     _hareketController.clear();
                     _setController.clear();
                     _tekrarController.clear();
                     _agirlikController.clear();
                     _donguController.clear();
 
-                    // Dialog kapat
                     Navigator.of(context).pop();
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Egzersiz başarıyla eklendi!")),
+                    showCupertinoDialog(
+                      context: context,
+                      builder: (context) => CupertinoAlertDialog(
+                        title: Text("Başarılı"),
+                        content: Text("Egzersiz başarıyla eklendi!"),
+                        actions: [
+                          CupertinoDialogAction(
+                            child: Text("Tamam"),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
                     );
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Hata oluştu: $e")),
+                    showCupertinoDialog(
+                      context: context,
+                      builder: (context) => CupertinoAlertDialog(
+                        title: Text("Hata"),
+                        content: Text("Hata oluştu: $e"),
+                        actions: [
+                          CupertinoDialogAction(
+                            child: Text("Tamam"),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
                     );
                   }
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Tüm alanları doldurun!")),
+                  showCupertinoDialog(
+                    context: context,
+                    builder: (context) => CupertinoAlertDialog(
+                      title: Text("Hata"),
+                      content: Text("Tüm alanları doldurun!"),
+                      actions: [
+                        CupertinoDialogAction(
+                          child: Text("Tamam"),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
                   );
                 }
               },
-              child: Text(
-                'Ekle',
-                style: TextStyle(color: Colors.blueAccent), // Buton rengi yeşil
-              ),
+              child: Text('Ekle'),
             ),
           ],
         );

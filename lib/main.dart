@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:spor_takip_uygulamasi/presentation/screens/auth/login.dart';
-import 'package:spor_takip_uygulamasi/presentation/screens/home/assigner.dart';
-import 'package:spor_takip_uygulamasi/presentation/splash/splash.dart';
+import 'package:spor_takip_uygulamasi/presentation/screens/splash_screen/splash.dart';
+import 'package:spor_takip_uygulamasi/logic/providers/user_data_provider.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
@@ -28,38 +28,46 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Ronin',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        textTheme: GoogleFonts.agdasimaTextTheme(),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.blue,
-          titleTextStyle: GoogleFonts.agdasima(
-            textStyle: TextStyle(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<UserDataProvider>(
+            create: (context) => UserDataProvider()),
+      ],
+      child: CupertinoApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Ronin',
+        theme: CupertinoThemeData(
+          primaryColor: CupertinoColors.systemBlue,
+          barBackgroundColor: CupertinoColors.systemBlue,
+          textTheme: CupertinoTextThemeData(
+            textStyle: GoogleFonts.agdasima(
+              fontSize: 16,
+              color: CupertinoColors.black,
+            ),
+            navTitleTextStyle: GoogleFonts.agdasima(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: CupertinoColors.white,
             ),
           ),
         ),
+        // initialRoute: '/splash',
+        home: SplashScreen(),
+        // getPages: [
+        //   GetPage(
+        //     name: '/splash',
+        //     page: () => SplashScreen(isLoggedIn: isLoggedIn),
+        //   ),
+        //   GetPage(
+        //     name: '/',
+        //     page: () => LoginScreen(),
+        //   ),
+        //   GetPage(
+        //     name: '/assigner',
+        //     page: () => Assigner(),
+        //   ),
+        // ],
       ),
-      initialRoute: '/splash',
-      getPages: [
-        GetPage(
-          name: '/splash',
-          page: () => SplashScreen(isLoggedIn: isLoggedIn),
-        ),
-        GetPage(
-          name: '/',
-          page: () => LoginScreen(),
-        ),
-        GetPage(
-          name: '/assigner',
-          page: () => Assigner(),
-        ),
-      ],
     );
   }
 }

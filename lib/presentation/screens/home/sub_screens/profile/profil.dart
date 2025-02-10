@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:spor_takip_uygulamasi/repository/addToFirebase.dart';
 
@@ -65,42 +65,54 @@ class _ProfilScreenState extends State<ProfilScreen> {
   @override
   Widget build(BuildContext context) {
     final accountDeletionManager = AccountDeletionManager();
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.black,
+      child: SafeArea(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Spacer(),
-              if (isLoading) CircularProgressIndicator(),
+              if (isLoading) CupertinoActivityIndicator(),
               if (!isLoading) ...[
                 Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[900],
+                    color: CupertinoColors.darkBackgroundGray,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Colors.black,
+                      color: CupertinoColors.black,
                       width: 2,
                     ),
                   ),
                   child: Column(
                     children: [
-                      TextButton(
+                      CupertinoButton(
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: '$uid'))
                               .then((_) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(
-                                      'Kullanıcı ID\'si panoya kopyalandı!')),
+                            showCupertinoModalPopup(
+                              context: context,
+                              builder: (BuildContext context) =>
+                                  CupertinoActionSheet(
+                                message:
+                                    Text('Kullanıcı ID\'si panoya kopyalandı!'),
+                                actions: [
+                                  CupertinoActionSheetAction(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text('Tamam'),
+                                  ),
+                                ],
+                              ),
                             );
                           });
                         },
                         child: Text(
                           'Username: ${username ?? 'Bilinmiyor'}',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                          style: TextStyle(
+                              color: CupertinoColors.white, fontSize: 18),
                         ),
                       ),
                       SizedBox(
@@ -108,21 +120,22 @@ class _ProfilScreenState extends State<ProfilScreen> {
                       ),
                       Text(
                         'Email: ${email ?? 'Bilinmiyor'}',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                        style: TextStyle(
+                            color: CupertinoColors.white, fontSize: 16),
                       ),
                     ],
                   ),
                 ),
               ],
               Spacer(),
-              TextButton(
+              CupertinoButton(
                 onPressed: () {
                   accountDeletionManager.deleteUserAccount(context);
                 },
-                style: TextButton.styleFrom(backgroundColor: Colors.red),
+                color: CupertinoColors.destructiveRed,
                 child: Text(
                   'Hesabı Sil',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  style: TextStyle(color: CupertinoColors.white, fontSize: 16),
                 ),
               ),
               SizedBox(

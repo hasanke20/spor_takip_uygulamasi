@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,15 +38,15 @@ class AddProgram {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      print("Program başarıyla eklendi: ${docRef.id}");
-      print('$targetCycle');
+      debugPrint("Program başarıyla eklendi: ${docRef.id}");
+      debugPrint('$targetCycle');
       await docRef.collection('Dongu').doc('cycle').set({
         'targetCycle': targetCycle,
       });
 
-      print("Alt koleksiyon başarıyla eklendi.");
+      debugPrint("Alt koleksiyon başarıyla eklendi.");
     } catch (e) {
-      print("Hata oluştu: $e");
+      debugPrint("Hata oluştu: $e");
     }
   }
 }
@@ -178,7 +179,7 @@ class AddExercise {
       });
       return true;
     } catch (e) {
-      print("Egzersiz ekleme hatası: $e");
+      debugPrint("Egzersiz ekleme hatası: $e");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Egzersiz ekleme hatası!'),
       ));
@@ -215,7 +216,7 @@ class AddExercise {
         content: Text('Egzersiz başarıyla güncellendi!'),
       ));
     } catch (e) {
-      print("Egzersiz güncelleme hatası: $e");
+      debugPrint("Egzersiz güncelleme hatası: $e");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Egzersiz güncelleme hatası!'),
       ));
@@ -261,7 +262,7 @@ class AddWeight {
 
       return true;
     } catch (e) {
-      print('Kilo eklenirken hata: $e');
+      debugPrint('Kilo eklenirken hata: $e');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Kilo ekleme hatası!'),
       ));
@@ -296,7 +297,7 @@ class AddWeight {
 
       return true;
     } catch (e) {
-      print('Kilo güncellenirken hata: $e');
+      debugPrint('Kilo güncellenirken hata: $e');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Kilo güncelleme hatası!'),
       ));
@@ -319,7 +320,7 @@ class LastProgram {
         'programId': programId,
       });
     } else {
-      print('Kullanıcı kimliği bulunamadı.');
+      debugPrint('Kullanıcı kimliği bulunamadı.');
     }
   }
 }
@@ -573,7 +574,7 @@ Future<void> incrementCompletedCycles(String programId) async {
   String? uid = FirebaseAuth.instance.currentUser?.uid;
 
   if (uid == null) {
-    print("Kullanıcı kimliği bulunamadı.");
+    debugPrint("Kullanıcı kimliği bulunamadı.");
     return;
   }
 
@@ -591,31 +592,31 @@ Future<void> incrementCompletedCycles(String programId) async {
 
     completedCycle++;
     if (completedCycle >= targetCycle) {
-      print('$completedCycle');
+      debugPrint('$completedCycle');
       completedCycle = 0;
-      print('$completedCycle');
+      debugPrint('$completedCycle');
 
       QuerySnapshot exercisesSnapshot = await FirebaseFirestore.instance
           .collection('Users/$uid/Programs/$programId/Exercises')
           .get();
-      print('Ref alindi');
+      debugPrint('Ref alindi');
 
       for (var exercise in exercisesSnapshot.docs) {
         double currentWeight =
             (exercise.data() as Map<String, dynamic>)['agirlik'].toDouble() ??
                 0.0;
-        print('currentWeight: $currentWeight');
+        debugPrint('currentWeight: $currentWeight');
 
         double donguKilo =
             (exercise.data() as Map<String, dynamic>)['donguKilo'].toDouble() ??
                 0.0;
-        print('donguKilo: $currentWeight');
+        debugPrint('donguKilo: $currentWeight');
 
         await FirebaseFirestore.instance
             .collection('Users/$uid/Programs/$programId/Exercises')
             .doc(exercise.id)
             .update({'agirlik': (currentWeight + donguKilo).toDouble()});
-        print('Kilolar toplandi');
+        debugPrint('Kilolar toplandi');
       }
     }
 
@@ -627,9 +628,9 @@ Future<void> incrementCompletedCycles(String programId) async {
       'completedCycle': completedCycle,
     });
 
-    print("completedCycle değeri başarıyla artırıldı.");
+    debugPrint("completedCycle değeri başarıyla artırıldı.");
   } catch (error) {
-    print("completedCycle değeri artırıl: $error");
+    debugPrint("completedCycle değeri artırıl: $error");
   }
 }
 
@@ -638,47 +639,42 @@ class AccountDeletionManager {
     final _reasonController = TextEditingController();
     final _formKey = GlobalKey<FormState>();
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
-      barrierDismissible: false, // Kullanıcı dışarıya tıklayarak kapatamaz
+      barrierDismissible: false,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return CupertinoAlertDialog(
           title: Text("Hesap Silme Talebi"),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: CupertinoTextField(
                   controller: _reasonController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: "Hesabı silme nedeniniz",
-                  ),
+                  placeholder: "Hesabı silme nedeniniz",
                   maxLines: 3,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Lütfen bir neden girin.";
-                    }
-                    return null;
-                  },
+                  decoration: BoxDecoration(
+                    border: Border.all(color: CupertinoColors.systemGrey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           actions: [
-            TextButton(
+            CupertinoDialogAction(
               onPressed: () {
-                Navigator.pop(
-                    context); // Kullanıcı "İptal" derse dialog kapatılır
+                Navigator.pop(context);
               },
               child: Text("İptal"),
+              isDefaultAction: true,
             ),
-            ElevatedButton(
+            CupertinoDialogAction(
               onPressed: () async {
-                print(_reasonController);
-                if (_formKey.currentState!.validate()) {
-                  Navigator.pop(context); // Formu kapat
+                debugPrint(_reasonController.text);
+                if (_reasonController.text.isNotEmpty) {
+                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
@@ -689,6 +685,7 @@ class AccountDeletionManager {
                 }
               },
               child: Text("Gönder"),
+              isDestructiveAction: true,
             ),
           ],
         );
@@ -712,9 +709,9 @@ class AccountDeletionManager {
         ..text = 'Kullanıcı, hesabını silmek istiyor. Sebep: $reason';
 
       await send(message, smtpServer);
-      print("Mail başarıyla gönderildi.");
+      debugPrint("Mail başarıyla gönderildi.");
     } catch (e) {
-      print("Mail gönderme hatası: $e");
+      debugPrint("Mail gönderme hatası: $e");
     }
   }
 */
@@ -780,49 +777,39 @@ class AccountDeletionManager {
     required String title,
     required String content,
   }) async {
-    return await showDialog<bool>(
+    return await showCupertinoDialog<bool>(
           context: context,
-          barrierDismissible: false, // Dışarı tıklanarak kapatılamaz
+          barrierDismissible: false,
           builder: (BuildContext context) {
-            return AlertDialog(
-              backgroundColor: Colors.black, // Koyu tema için siyah arka plan
+            return CupertinoAlertDialog(
               title: Text(
                 title,
                 style: TextStyle(
-                  color: Colors.white, // Başlık için beyaz renk
                   fontWeight: FontWeight.bold,
                 ),
               ),
               content: Text(
                 content,
-                style: TextStyle(
-                  color: Colors.grey[300], // İçerik metni için açık gri renk
-                ),
               ),
               actions: [
-                TextButton(
+                CupertinoDialogAction(
                   onPressed: () => Navigator.of(context).pop(false),
                   child: Text(
                     "Hayır",
-                    style: TextStyle(
-                      color:
-                          Colors.blueAccent, // Hayır butonu için kırmızı renk
-                    ),
                   ),
+                  isDefaultAction: true,
                 ),
-                TextButton(
+                CupertinoDialogAction(
                   onPressed: () => Navigator.of(context).pop(true),
                   child: Text(
                     "Evet",
-                    style: TextStyle(
-                      color: Colors.red[400], // Evet butonu için yeşil renk
-                    ),
                   ),
+                  isDestructiveAction: true,
                 ),
               ],
             );
           },
         ) ??
-        false; // Kullanıcı iptal ederse false döner
+        false;
   }
 }

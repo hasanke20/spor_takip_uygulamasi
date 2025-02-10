@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:spor_takip_uygulamasi/repository/addToFirebase.dart';
+import 'package:provider/provider.dart';
+import '../../../../logic/providers/user_data_provider.dart';
 
 import 'programs/exercises/exercise.dart';
 
@@ -21,18 +24,25 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    _fetchProgramsFuture = _fetchPrograms();
+    _fetchProgramsFuture = Provider.of<UserDataProvider>(context, listen: false)
+        .fetchPrograms(
+            context, programs, lastProgramName ?? '', nextProgramName ?? '');
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.black,
+      child: SafeArea(
+        child: Center(
           child: FutureBuilder<void>(
             future: _fetchProgramsFuture,
             builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator(); // Show loading indicator
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}'); // Handle error
+              }
               return Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
@@ -56,11 +66,11 @@ class _HomeState extends State<Home> {
       width: MediaQuery.of(context).size.width,
       height: MediaQuery.of(context).size.height / 5,
       decoration: BoxDecoration(
-        color: Colors.grey[900], // Koyu gri arka plan
-        borderRadius: BorderRadius.circular(20), // Daha yuvarlak köşeler
+        color: CupertinoColors.darkBackgroundGray,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: CupertinoColors.black.withOpacity(0.5),
             blurRadius: 8,
             offset: Offset(0, 4),
           ),
@@ -72,8 +82,8 @@ class _HomeState extends State<Home> {
           Text(
             'Hemen Spor Yapmaya Başla!',
             style: TextStyle(
-              fontSize: 28, // Daha büyük başlık
-              color: Colors.white, // Beyaz metin rengi
+              fontSize: 28,
+              color: CupertinoColors.white,
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
@@ -82,8 +92,8 @@ class _HomeState extends State<Home> {
           Text(
             'Son yapılan program: $lastProgramName',
             style: TextStyle(
-              color: Colors.white70,
-              fontSize: 20, // Orta boyut
+              color: CupertinoColors.white.withOpacity(0.7),
+              fontSize: 20,
             ),
           ),
           SizedBox(height: 10),
@@ -93,12 +103,15 @@ class _HomeState extends State<Home> {
               Text(
                 'Sıradaki Program:',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: CupertinoColors.white,
                   fontSize: 20,
                 ),
               ),
               SizedBox(width: 10),
-              TextButton(
+              CupertinoButton(
+                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                color: CupertinoColors.activeBlue,
+                borderRadius: BorderRadius.circular(15),
                 onPressed: () {
                   if (nextProgramName != null) {
                     String programId = programs.firstWhere((program) =>
@@ -106,18 +119,11 @@ class _HomeState extends State<Home> {
                     _navigateToExerciseScreen(programId);
                   }
                 },
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
                 child: Text(
                   nextProgramName ?? 'Program Yok',
                   style: TextStyle(
                     fontSize: 18,
-                    color: Colors.white,
+                    color: CupertinoColors.white,
                   ),
                 ),
               ),
@@ -131,16 +137,19 @@ class _HomeState extends State<Home> {
   Widget _buildWeightButton() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: CupertinoColors.darkBackgroundGray,
         borderRadius: BorderRadius.circular(12),
       ),
       height: MediaQuery.of(context).size.height / 10,
       width: MediaQuery.of(context).size.width / 2,
-      child: TextButton(
+      child: CupertinoButton(
         onPressed: showWeightDialog,
         child: Text(
           'Kilonu Gir',
-          style: TextStyle(color: Colors.white, fontSize: 35),
+          style: TextStyle(
+            color: CupertinoColors.white,
+            fontSize: 35,
+          ),
         ),
       ),
     );
@@ -149,7 +158,7 @@ class _HomeState extends State<Home> {
   void _navigateToExerciseScreen(String programId) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      CupertinoPageRoute(
         builder: (context) => ExerciseScreen(programId: programId),
       ),
     );
@@ -158,148 +167,44 @@ class _HomeState extends State<Home> {
   void showWeightDialog() {
     final TextEditingController weightController = TextEditingController();
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: Text('Tartı Girişi', style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: weightController,
-                keyboardType: TextInputType.number,
-                style: TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Kilo (kg)',
-                  hintStyle: TextStyle(color: Colors.grey),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide(color: Colors.blue),
-                  ),
-                ),
+        return CupertinoAlertDialog(
+          title: Text('Tartı Girişi'),
+          content: Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: CupertinoTextField(
+              controller: weightController,
+              keyboardType: TextInputType.number,
+              placeholder: 'Kilo (kg)',
+              decoration: BoxDecoration(
+                border: Border.all(color: CupertinoColors.systemGrey),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ],
+            ),
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('İptal', style: TextStyle(color: Colors.white)),
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('İptal'),
             ),
-            TextButton(
+            CupertinoDialogAction(
               onPressed: () async {
                 double? weight = double.tryParse(weightController.text);
                 if (weight != null) {
-                  bool success = await AddWeight.addWeight(context, weight);
+                  final userDataProvider = context.read<UserDataProvider>();
+                  bool success = await userDataProvider.addWeight(weight);
                   if (success) {
                     Navigator.of(context).pop();
-                  } else {
-                    // Hata durumu, ekranı kapatmadan bildirim göster
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Kilo eklenirken bir hata oluştu.'),
-                      backgroundColor: Colors.red,
-                    ));
                   }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content:
-                        Text('Geçersiz kilo değeri. Lütfen bir sayı girin.'),
-                    backgroundColor: Colors.red,
-                  ));
                 }
               },
-              child: Text('Kaydet', style: TextStyle(color: Colors.blueAccent)),
+              child: Text('Kaydet'),
             ),
           ],
         );
       },
     );
-  }
-
-  Future<void> _fetchPrograms() async {
-    String? uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Lütfen giriş yapın.'),
-        backgroundColor: Colors.red,
-      ));
-      return;
-    }
-
-    try {
-      QuerySnapshot programSnapshot = await FirebaseFirestore.instance
-          .collection('Users/$uid/Programs')
-          .orderBy('timestamp')
-          .get();
-
-      programs = programSnapshot.docs.map((doc) {
-        return {
-          'programId': doc.id,
-          'programAdi': doc['programAdi'],
-          'timestamp': doc['timestamp'] as Timestamp,
-        };
-      }).toList();
-
-      await _fetchNextProgram(uid);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Veri çekme hatası: $e'),
-        backgroundColor: Colors.red,
-      ));
-    }
-  }
-
-  Future<void> _fetchNextProgram(String uid) async {
-    DocumentSnapshot lastProgramSnapshot = await FirebaseFirestore.instance
-        .collection('Users/$uid/Values')
-        .doc('LastProgram')
-        .get();
-
-    if (!lastProgramSnapshot.exists) {
-      lastProgramName = 'Program Yok';
-      nextProgramName = 'Program Yok';
-      return;
-    }
-
-    String? lastProgramId = lastProgramSnapshot['programId'];
-    DocumentSnapshot lastProgramDoc = await FirebaseFirestore.instance
-        .collection('Users/$uid/Programs')
-        .doc(lastProgramId)
-        .get();
-
-    lastProgramName =
-        lastProgramDoc.exists ? lastProgramDoc['programAdi'] : 'Program Yok';
-
-    // Programları sıralayın
-    programs.sort((a, b) =>
-        (a['timestamp'] as Timestamp).compareTo(b['timestamp'] as Timestamp));
-
-    // Son yapılan programın indeksini bul
-    int lastProgramIndex =
-        programs.indexWhere((program) => program['programId'] == lastProgramId);
-
-    if (lastProgramIndex != -1) {
-      // Son program son eleman ise, sıradaki program listenin başındaki program
-      if (lastProgramIndex == programs.length - 1) {
-        nextProgramName = programs[0]['programAdi'];
-      } else {
-        nextProgramName = programs[lastProgramIndex + 1]['programAdi'];
-      }
-    } else {
-      nextProgramName = 'Program Yok';
-    }
-
-    setState(() {});
   }
 }

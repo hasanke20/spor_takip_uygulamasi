@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:spor_takip_uygulamasi/logic/providers/user_data_provider.dart';
+import 'package:spor_takip_uygulamasi/presentation/screens/auth/login.dart';
+import 'package:spor_takip_uygulamasi/presentation/screens/home/index.dart';
 
 class SplashScreen extends StatefulWidget {
-  final bool isLoggedIn;
-  const SplashScreen({Key? key, required this.isLoggedIn}) : super(key: key);
+  const SplashScreen({Key? key}) : super(key: key);
 
   @override
   _SplashScreenState createState() => _SplashScreenState();
@@ -19,12 +21,14 @@ class _SplashScreenState extends State<SplashScreen> {
   String author = "";
   bool isLoading = true;
   int remainingTime = 4;
+  late UserDataProvider _userDataProvider;
 
   @override
   void initState() {
     super.initState();
     _startSplashSequence();
     _startCountdown();
+    _userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
   }
 
   /// Splash Screen işlemleri
@@ -47,14 +51,13 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateAfterSplash() async {
-    final prefs = await SharedPreferences.getInstance();
-    final rememberMe = prefs.getBool('rememberMe') ?? false;
-    final bool isLoggedIn = rememberMe && prefs.getString('email') != null;
-
-    if (isLoggedIn) {
-      Get.offNamed('/assigner'); // Kullanıcı giriş yaptıysa
+    // Using the provider's observable values
+    if (_userDataProvider.isLoggedIn) {
+      Navigator.of(context).pushReplacement(
+          CupertinoPageRoute(builder: (context) => IndexApp()));
     } else {
-      Get.offNamed('/'); // Giriş yapılmamışsa
+      Navigator.of(context).pushReplacement(
+          CupertinoPageRoute(builder: (context) => LoginScreen()));
     }
   }
 

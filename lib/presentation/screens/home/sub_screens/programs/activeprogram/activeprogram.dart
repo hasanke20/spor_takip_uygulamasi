@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:spor_takip_uygulamasi/repository/addToFirebase.dart';
 
 class ActiveProgram extends StatefulWidget {
@@ -47,26 +47,24 @@ class _ActiveProgramState extends State<ActiveProgram> {
   }
 
   Future<bool> _onWillPop() async {
-    return (await showDialog(
+    return (await showCupertinoDialog(
           context: context,
           builder: (context) {
-            return AlertDialog(
-              backgroundColor: Colors.grey[900],
-              title: Text('Çıkış yapmak istediğinize emin misiniz?',
-                  style: TextStyle(color: Colors.white)),
+            return CupertinoAlertDialog(
+              title: Text('Çıkış yapmak istediğinize emin misiniz?'),
               actions: [
-                TextButton(
+                CupertinoDialogAction(
                   onPressed: () {
                     Navigator.of(context).pop(false);
                   },
-                  child:
-                      Text('Geri Dön', style: TextStyle(color: Colors.white)),
+                  child: Text('Geri Dön'),
                 ),
-                TextButton(
+                CupertinoDialogAction(
                   onPressed: () {
                     Navigator.of(context).pop(true);
                   },
-                  child: Text('Çıkış', style: TextStyle(color: Colors.red)),
+                  isDestructiveAction: true,
+                  child: Text('Çıkış'),
                 ),
               ],
             );
@@ -77,198 +75,188 @@ class _ActiveProgramState extends State<ActiveProgram> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.black87,
-          leadingWidth: 80,
-          leading: Container(
-            margin: EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(12.0),
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        backgroundColor: CupertinoColors.black,
+        leading: Container(
+          margin: EdgeInsets.all(8.0),
+          child: CupertinoButton(
+            padding: EdgeInsets.zero,
+            color: CupertinoColors.destructiveRed,
+            borderRadius: BorderRadius.circular(12.0),
+            onPressed: () {
+              showCupertinoDialog(
+                context: context,
+                builder: (context) {
+                  return CupertinoAlertDialog(
+                    title: Text('Çıkış yapmak istediğinize emin misiniz?'),
+                    actions: [
+                      CupertinoDialogAction(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Geri Dön'),
+                      ),
+                      CupertinoDialogAction(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.pop(context);
+                        },
+                        isDestructiveAction: true,
+                        child: Text('Çıkış'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            child: Text(
+              'Çıkış',
+              style: TextStyle(color: CupertinoColors.white),
             ),
-            child: TextButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      backgroundColor: Colors.grey[900],
-                      title: Text('Çıkış yapmak istediğinize emin misiniz?',
-                          style: TextStyle(color: Colors.white)),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text('Geri Dön',
-                              style: TextStyle(color: Colors.white)),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            Navigator.pop(context);
-                          },
-                          child: Text('Çıkış',
-                              style: TextStyle(color: Colors.red)),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-              child: Text(
-                'Çıkış',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
-          title: Text(
-            'Aktif Program',
-            style: TextStyle(color: Colors.white),
           ),
         ),
-        body: exercises.isEmpty
-            ? Center(child: CircularProgressIndicator())
-            : Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${currentIndex + 1}/${exercises.length}',
-                      style: TextStyle(fontSize: 30, color: Colors.white),
+        middle: Text(
+          'Aktif Program',
+          style: TextStyle(color: CupertinoColors.white),
+        ),
+      ),
+      backgroundColor: CupertinoColors.black,
+      child: exercises.isEmpty
+          ? Center(child: CupertinoActivityIndicator())
+          : Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${currentIndex + 1}/${exercises.length}',
+                    style:
+                        TextStyle(fontSize: 30, color: CupertinoColors.white),
+                  ),
+                  SizedBox(height: 20),
+                  Container(
+                    width: 300,
+                    decoration: BoxDecoration(
+                      color: CupertinoColors.darkBackgroundGray,
+                      borderRadius: BorderRadius.circular(15.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: CupertinoColors.black.withOpacity(0.5),
+                          blurRadius: 10.0,
+                          offset: Offset(0, 5),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 20),
-                    Container(
-                      width: 300,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[900],
-                        borderRadius: BorderRadius.circular(15.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black54,
-                            blurRadius: 10.0,
-                            offset: Offset(0, 5),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            exercises[currentIndex]['hareketAdi'],
+                            style: TextStyle(
+                                fontSize: 24, color: CupertinoColors.white),
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            'Set: ${exercises[currentIndex]['set']}',
+                            style: TextStyle(
+                                fontSize: 20, color: CupertinoColors.white),
+                          ),
+                          Text(
+                            'Tekrar: ${exercises[currentIndex]['tekrar']}',
+                            style: TextStyle(
+                                fontSize: 20, color: CupertinoColors.white),
+                          ),
+                          Text(
+                            'Ağırlık: ${exercises[currentIndex]['agirlik']}',
+                            style: TextStyle(
+                                fontSize: 20, color: CupertinoColors.white),
                           ),
                         ],
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              exercises[currentIndex]['hareketAdi'],
-                              style:
-                                  TextStyle(fontSize: 24, color: Colors.white),
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              'Set: ${exercises[currentIndex]['set']}',
-                              style:
-                                  TextStyle(fontSize: 20, color: Colors.white),
-                            ),
-                            Text(
-                              'Tekrar: ${exercises[currentIndex]['tekrar']}',
-                              style:
-                                  TextStyle(fontSize: 20, color: Colors.white),
-                            ),
-                            Text(
-                              'Ağırlık: ${exercises[currentIndex]['agirlik']}',
-                              style:
-                                  TextStyle(fontSize: 20, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
-                    SizedBox(height: 50),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Container(
-                            margin: EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[900],
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            child: TextButton(
-                              onPressed: currentIndex == 0
-                                  ? null
-                                  : () {
-                                      setState(() {
-                                        currentIndex--;
-                                      });
-                                    },
-                              child: Text(
-                                'Geri',
-                                style: TextStyle(
-                                  color: currentIndex == 0
-                                      ? Colors.grey[600]
-                                      : Colors.white,
-                                ),
+                  ),
+                  SizedBox(height: 50),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          margin: EdgeInsets.all(8.0),
+                          child: CupertinoButton(
+                            padding: EdgeInsets.zero,
+                            color: CupertinoColors.darkBackgroundGray,
+                            borderRadius: BorderRadius.circular(12.0),
+                            onPressed: currentIndex == 0
+                                ? null
+                                : () {
+                                    setState(() {
+                                      currentIndex--;
+                                    });
+                                  },
+                            child: Text(
+                              'Geri',
+                              style: TextStyle(
+                                color: currentIndex == 0
+                                    ? CupertinoColors.inactiveGray
+                                    : CupertinoColors.white,
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Container(
-                            margin: EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[900],
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            child: TextButton(
-                              onPressed: currentIndex == exercises.length - 1
-                                  ? null
-                                  : () {
-                                      setState(() {
-                                        currentIndex++;
-                                      });
-                                    },
-                              child: Text(
-                                'İleri',
-                                style: TextStyle(
-                                  color: currentIndex == exercises.length - 1
-                                      ? Colors.grey[600]
-                                      : Colors.white,
-                                ),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Container(
+                          margin: EdgeInsets.all(8.0),
+                          child: CupertinoButton(
+                            padding: EdgeInsets.zero,
+                            color: CupertinoColors.darkBackgroundGray,
+                            borderRadius: BorderRadius.circular(12.0),
+                            onPressed: currentIndex == exercises.length - 1
+                                ? null
+                                : () {
+                                    setState(() {
+                                      currentIndex++;
+                                    });
+                                  },
+                            child: Text(
+                              'İleri',
+                              style: TextStyle(
+                                color: currentIndex == exercises.length - 1
+                                    ? CupertinoColors.inactiveGray
+                                    : CupertinoColors.white,
                               ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                    if (currentIndex == exercises.length - 1)
-                      Container(
-                        margin: EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[900],
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        child: TextButton(
-                          onPressed: () async {
-                            String programId = widget.programId;
-                            await incrementCompletedCycle(programId);
-                            LastProgram lastProgramInstance = LastProgram();
-                            lastProgramInstance.lastProgram(programId);
-                            Navigator.pop(context);
-                          },
-                          child: Text(
-                            'Programı Bitir',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                      ),
+                    ],
+                  ),
+                  if (currentIndex == exercises.length - 1)
+                    Container(
+                      margin: EdgeInsets.all(8.0),
+                      child: CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        color: CupertinoColors.darkBackgroundGray,
+                        borderRadius: BorderRadius.circular(12.0),
+                        onPressed: () async {
+                          String programId = widget.programId;
+                          await incrementCompletedCycle(programId);
+                          LastProgram lastProgramInstance = LastProgram();
+                          lastProgramInstance.lastProgram(programId);
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'Programı Bitir',
+                          style: TextStyle(color: CupertinoColors.white),
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
-      ),
+            ),
     );
   }
 }

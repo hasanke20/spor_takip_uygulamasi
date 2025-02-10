@@ -1,0 +1,256 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:spor_takip_uygulamasi/presentation/screens/home/sub_screens/statistics/Weight/allWeights.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
+
+class IstatisticScreen extends StatefulWidget {
+  const IstatisticScreen({super.key});
+
+  @override
+  State<IstatisticScreen> createState() => _IstatisticScreenState();
+}
+
+class _IstatisticScreenState extends State<IstatisticScreen> {
+  late List<ChartData> _chartData;
+  double? _minYValue;
+  double? _maxYValue;
+  List<double> _lastTwoWeights = [];
+  double? _initialWeight;
+
+  @override
+  void initState() {
+    super.initState();
+    _chartData = [];
+    _fetchWeightData();
+  }
+
+  Future<void> _fetchWeightData() async {
+    String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) return;
+
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Users/$uid/Weight')
+          .orderBy('timestamp', descending: false)
+          .get();
+
+      List<ChartData> allData = [];
+      for (var doc in snapshot.docs) {
+        double weight = doc['weight'];
+        allData.add(ChartData('', weight));
+      }
+
+      List<ChartData> lastEightData =
+          allData.length > 8 ? allData.sublist(allData.length - 8) : allData;
+
+      if (lastEightData.isNotEmpty) {
+        double minWeight = lastEightData
+            .map((data) => data.weight)
+            .reduce((a, b) => a < b ? a : b);
+        double maxWeight = lastEightData
+            .map((data) => data.weight)
+            .reduce((a, b) => a > b ? a : b);
+
+        setState(() {
+          _chartData = lastEightData.asMap().entries.map((entry) {
+            int index = allData.length - lastEightData.length + entry.key + 1;
+            ChartData data = entry.value;
+            return ChartData('$index. Ölçüm', data.weight);
+          }).toList();
+
+          _minYValue = minWeight - 5;
+          _maxYValue = maxWeight + 5;
+
+          if (allData.isNotEmpty) {
+            _lastTwoWeights = allData.map((data) => data.weight).toList();
+            if (_lastTwoWeights.length > 2) {
+              _lastTwoWeights =
+                  _lastTwoWeights.sublist(_lastTwoWeights.length - 2);
+            }
+
+            _initialWeight = allData.first.weight;
+          }
+        });
+      }
+    } catch (e) {
+      print("Veri çekerken hata: $e");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double? latestWeight =
+        _lastTwoWeights.length > 0 ? _lastTwoWeights.last : null;
+    double? previousWeight = _lastTwoWeights.length > 1
+        ? _lastTwoWeights[_lastTwoWeights.length - 2]
+        : null;
+
+    double? changeFromInitial = (latestWeight != null && _initialWeight != null)
+        ? (latestWeight - _initialWeight!)
+        : null;
+
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.black,
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.darkBackgroundGray,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height / 4,
+                        child: SfCartesianChart(
+                          title: ChartTitle(
+                            text: 'Kilo Takibi',
+                            textStyle: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: CupertinoColors.white,
+                            ),
+                          ),
+                          legend: Legend(
+                            isVisible: false,
+                            textStyle: TextStyle(color: CupertinoColors.white),
+                          ),
+                          primaryXAxis: CategoryAxis(
+                            labelStyle: TextStyle(color: CupertinoColors.white),
+                          ),
+                          primaryYAxis: NumericAxis(
+                            minimum: _minYValue,
+                            maximum: _maxYValue,
+                            labelFormat: '{value} kg',
+                            labelStyle: TextStyle(color: CupertinoColors.white),
+                          ),
+                          series: <LineSeries<ChartData, String>>[
+                            LineSeries<ChartData, String>(
+                              dataSource: _chartData,
+                              xValueMapper: (ChartData data, _) => data.week,
+                              yValueMapper: (ChartData data, _) => data.weight,
+                              name: 'Kilo',
+                              color: CupertinoColors.activeBlue,
+                              markerSettings:
+                                  const MarkerSettings(isVisible: true),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Column(
+                        children: [
+                          Container(
+                            margin: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: CupertinoColors.systemGrey.darkColor,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text('Son Ölçüm',
+                                          style: TextStyle(
+                                              color: CupertinoColors.white,
+                                              fontSize: 16)),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: CupertinoColors
+                                              .darkBackgroundGray,
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          latestWeight != null
+                                              ? '$latestWeight kg'
+                                              : 'Veri yok',
+                                          style: TextStyle(
+                                              color: CupertinoColors.white,
+                                              fontSize: 20),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text('Toplam Değişim',
+                                          style: TextStyle(
+                                              color: CupertinoColors.white,
+                                              fontSize: 16)),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: CupertinoColors
+                                              .darkBackgroundGray,
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          changeFromInitial != null
+                                              ? '${changeFromInitial >= 0 ? '+' : ''}${changeFromInitial.toStringAsFixed(1)} kg'
+                                              : 'Veri yok',
+                                          style: TextStyle(
+                                              color: CupertinoColors.white,
+                                              fontSize: 20),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0, horizontal: 16.0),
+                                child: CupertinoButton(
+                                  color: CupertinoColors.systemGrey.darkColor,
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                        CupertinoPageRoute(
+                                            builder: (context) =>
+                                                AllWeights()));
+                                  },
+                                  child: Text('Tümünü Gör'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ChartData {
+  ChartData(this.week, this.weight);
+  final String week;
+  final double weight;
+}
